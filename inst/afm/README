@@ -1,0 +1,5 @@
+The 14 "core" AFM files were downloaded from Adobe (see "MustRead.html"), which notes that these files may be used for any purpose and that modification is allowed.  These AFM files were modified to use unicode (UCS-2) encoding through the use of the Adobe glyph name to unicode mapping found at 
+   https://github.com/adobe-type-tools/agl-aglfn
+on 17 March 2016.
+
+One exception: this mapping file encodes the gylph named "Omega" as U+2126, which is a deprecated unicode character for the Ohm symbol.  A better mapping for our purposes is U+03A9, which unicode refers to as the upper case greek letter.This chracter mapping was edited by hand.

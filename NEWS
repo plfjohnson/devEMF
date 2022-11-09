@@ -1,0 +1,187 @@
+v4.1-1 -- 30 Oct 2022
+  -clipping rectangles (both EMF and EMF+) were previously being
+   defined starting from the lower-left corner.  However, the EMF/EMF+
+   spec says rectangles should be defined from the upper-left corner.
+   Most viewing programs handled either way; however, when Word
+   exports to PDF, it requires the definition to match the
+   specification.  Fixed now, along with a couple other places
+   rectangles were used.  (Thanks to Arnaud Atoch for reporting.)
+
+v4.1 -- 12 May 2022
+  -if making an EMF+ file but have the possibility of using any EMF
+   drawing records (i.e., unless emfPlusFont=TRUE and
+   emfPlusRaster=TRUE), use EMF clipping in addition to EMF+ clipping.
+   Previously, if the file was EMF+, only did EMF+ clipping.  The old
+   strategy worked with some viewing programs but not all.
+  -tweak missing font metric warning message under Linux to remind
+   user that they might want to install Xft
+  -added "units" argument to emf() function to allow specification of
+   device width & height in SI units (thanks to Mauricio Vargas for
+   suggesting)
+
+v4.0-2 -- 30 Sept 2020
+  -add missing preprocessor conditional
+  -enable linear gradient fill for circles
+
+v4.0-1 -- 1 Sept 2020
+  -fix configure script to handle case where Xft (or FreeType or Zlib)
+   is available but not covered by pkg-config.
+
+v4.0 -- 28 Aug 2020
+  -new option emfPlusFontToPath that converts characters to EMF+
+   graphics paths and thus makes graphics files portable (otherwise
+   fonts must be installed on both the creating system and the viewing
+   system).  This route is the closest the EMF/EMF+ spec gets to
+   embedding fonts.  This option is implemented for Linux (via
+   FreeType support) and Windows; OSX support is not yet implemented.
+
+v3.8 -- 29 June 2020
+  -accommodate R graphics engine version 13
+  -add support for linear gradient fills (feature of GE13) for EMF+;
+   other new features from GE13 do not appear possible to implement
+   with EMF/EMF+
+  -fix couple minor memory leaks
+
+v3.7 -- 30 Sept 2019
+  -For EMF+, request PixelOffsetModeHalf during file setup; this
+   allows certain nominally adjacent drawn objects to appear as
+   actually adjacent (without a thin gap between).
+  -No longer create EMF+ record for polygon/path outline if transparent.
+  -eliminate R CMD config CPP from configure.ac (deprecated and unnecessary)
+  -request closest EMF/EMF+ text alignment (left-aligned /
+   center-aligned / right-aligned); previously always requested
+   left-aligned.  Since R allows for arbitrary horizontal alignment
+   between [0,1], we still need to calculate text width and adjust the
+   reference point manually.  This change works around minor slop in
+   the calculation of the string width using font metrics (the degree
+   of slop depends on the viewing program and can become noticeable
+   with very long right-aligned strings).
+
+v3.6-3 -- 20 June 2019
+  -Workaround for recent Microsoft security patch that breaks the EMF
+   specification and does not allow viewing of EMF files containing
+   certain Font-related records in Microsoft Office.  Files using only
+   EMF+ fonts are not affected.  The relevant CVE seems likely to be
+   https://www.zerodayinitiative.com/advisories/ZDI-19-557/
+  -Error check: return error if user requests negative or NA width/height
+  -Bug fix: handle text & font metrics for Unicode characters consuming more
+   than 2 bytes
+
+v3.6-2 -- 2 Jan 2019
+  -Bug fix: white text color not being set until a non-white text
+   color was used first (bug only in EMF).
+
+v3.6-1 -- 22 May 2018
+  -emphasize inability to embed fonts in help page
+  -attempt to fix compiler error on certain newer OSX systems
+
+v3.6 -- 21 July 2017
+  -for rotated text in EMF (as opposed to EMF+), insert rotation into
+   font specification rather than using world transform.  This change
+   makes for more ungainly files but greater compatibility with
+   viewing programs that only support a subset of the EMF specification.
+  -fix roundoff error when calculating page size in micrometers (in
+   EMF header; unclear if used by any viewing program)
+
+v3.5 -- 8 June 2017
+  -implement clipping at EMF/EMF+ level (previously relied on R to
+   clip, which is more aggressive, particularly with regard to text,
+   and led to difference between EMF output vs. other devices)
+  -only issue select object command for EMF font immediately before writing
+   text (previously issued when first requested font metrics, which was not
+   necessary)
+  -change EMF world rotation commands to avoid depending on
+   SAVE/RESTORE DC (which is unclear from spec whether it is supposed
+   to save world rotation state).  This change avoids a bug triggered
+   when printing figures with rotated text in Word 2010 (Thanks to
+   Philip Harslett for reporting)
+
+v3.4 -- 7 April 2017
+  -add option for user to specify DPI used when setting up device
+   coordinate system.  Previously was fixed at one dot per 0.01mm (aka
+   2540 DPI; 0.01mm units are used elsewhere by EMF), but some lazy
+   EMF clients appear to render the image as a bitmap of size equal to
+   inches * DPI.. which can lead to out of memory errors.  Changing
+   default to be 300 DPI.
+  -fix handling of miter limit for miter-type line joins in EMF+ files.
+  -correct R_init_* registration entrypoint name
+  -use registered R symbol as entrypoint in .External call
+  -fix PROTECT error (thanks to Tomas Kalibera's tool for identifying)
+
+v3.3-1 -- 10 Feb 2017
+  -fix edge case on linux where both Xft and zlib are installed but a
+   connection cannot be made to the X server (i.e., if running R from
+   ssh session without forwarding X connections)
+  -add cleanup script
+
+v3.3 -- 9 Feb 2017
+  -fix additional Solaris compiler errors & warnings
+  -add OSX linker option "-framework CoreText", which allows the
+   devEMF shared library to be loaded separately from standard R (and
+   hence pass cran checks).
+  -fix memory leak in EMF font handling (EMF+ was ok)
+  -fix memory leak in Windows GDI font metric code
+  -fix minor memory leak in Linux font metric code
+
+v3.2 -- 19 Sept 2016
+  -add raster image support
+  -embed devEMF version number in EMF output (in a comment field)
+  -rework text output to use world transformations
+  -bug fixes related to path rendering
+  -eliminate compiler errors on Solaris C++98 compiler
+
+v3.1 -- 17 Mar 2016
+  -add back ability to use Adobe font metric (AFM) files, in case no
+   graphical interface (Xft, Windows, Apple) is available to query.
+   Adobe distributes AFMs for the 14 core PDF fonts, and these are now
+   included in the devEMF package (note before v2.0, devEMF accessed
+   the AFMs included in the grDevices package).  To keep this package
+   size managable, the AFMs are gzipped, so using this ability
+   requires zlib.
+  -add support for path rendering
+
+v3.0 -- 3 Apr 2015
+  -add support for EMF+ output.  This format has less complete support
+   in client programs but allows for partial transparency.  EMF+
+   output is now the default, but the pure EMF output is still
+   possible with an option to the "emf()" call that opens the device.
+
+v2.0 -- 29 Jan 2015
+  -switch to platform-specific font metric code instead of accessing
+   the AFM files supplied with core R via a non-public R API (this
+   previous approach violated CRAN policy).  The primary downside is
+   that the new code will not operate on non-OSX, non-Windows
+   platforms unless X windows is installed along with the Xft
+   development headers.  It should work on OSX and Windows out of the
+   box; please contact me if you have trouble (I primarily work on
+   linux).
+  -bug fix: EMF polygon record had potential rounding mismatch between
+   vertex coordinates and bounding box coordinates.
+  -bug fix: when PS_NULL, set pen BS_NULL (although seems unnecessary
+   in practice)
+
+v1.2-1  --  18 Feb 2013
+  - Bug fix: EMF custom line types not working properly for solid
+    lines. (Thanks to Nis Martensen for reporting and patching)
+
+v1.2  --  22 Feb 2012
+  - Bug fix: TextUTF8 used incorrect vertical alignment. (Thanks to
+    Jared Decker for reporting)
+  - change yLineBias to be 0.2 for compatibility with R >= 2.14
+
+v1.1  --  6 Feb 2012
+  - Add support for different line end and join styles. (Thanks to
+    Mathias Walter for suggesting)
+
+v1.0-1
+  - Amend help to mention that partial transparency is not supported
+    by the EMF format
+
+v1.0
+  - Been using for 6mo with no problems; bump version to 1.
+  - Replace remaining few uses of printf with Rprintf
+
+v0.9-4
+  - Placed package within NAMESPACE (in prep for R-2.14.0)
+  - modified ps_fonts.h to make compatible with R-2.14.0 revised
+    handling of gzip i/o
