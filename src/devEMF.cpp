@@ -136,11 +136,10 @@ private:
                                     m_UseCustomLty, m_File);
     }
     int x_GetBrush(const pGEcontext gc) {
-        bool hasFill = !R_TRANSPARENT(gc->fill);
         if (!m_UseEMFPlus) {
-            return (hasFill ?
-                    m_ObjectTableEMF.GetBrush(gc->fill, m_File) : -1);
+            return (m_ObjectTableEMF.GetBrush(gc->fill, m_File));
         }
+        bool hasFill = !R_TRANSPARENT(gc->fill);
 #if R_GE_version >= 13
         hasFill = hasFill  ||  (gc->patternFill != R_NilValue);
 #endif
