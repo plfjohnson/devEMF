@@ -2,6 +2,8 @@ v4.1-2 -- 14 Dec 2022
   -bug fix: when generating an EMF plot, completely transparent fills
    were previously not handled correctly if they followed a solid
    color fill.  (Thanks to Mauricio Vargas for reporting.)
+  -moved code from personal svn repository to public github; added
+   github URL to DESCRIPTION file
 
 v4.1-1 -- 30 Oct 2022
   -clipping rectangles (both EMF and EMF+) were previously being
