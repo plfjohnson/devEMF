@@ -8,7 +8,7 @@ See NEWS file for package history; code was transferred from subversion to git i
 
 #### Installation
 
-Install as any R package from [CRAN](https://cran.r-project.org/web/packages/devEMF/index.html) using
+Install as any R package from [CRAN](https://CRAN.R-project.org/package=devEMF) using
 ```r
 install.packages("devEMF")
 ```
