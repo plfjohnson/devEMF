@@ -1,3 +1,21 @@
+v4.2 -- 17 Jan 2023
+  -When drawing EMF (not EMF+) text strings, the EMF specification
+   allows for supplying inter-character spacing, but the specification
+   is ambigiuous as to whether this spacing is required.  In the
+   absence of this inter-character spacing, all tested versions of
+   LibreOffice and Microsoft Office have no problem loading and view
+   EMF files.  However, if Office 365 imports an EMF file with
+   individual EMF text strings >= 40 characters long that lack this
+   spacing AND then the user attempts to export the Office 365
+   document to PDF, then it fails with an error message.  This version
+   of devEMF works around this issue by adding inter-character spacing
+   to EMF text drawing records.
+  -clean up and unify code for handling font metrics.  Add support for
+   loading kerning from AFM files.
+  -simplify autoconf script & #ifdefs to only specify Xft, not both
+   Xft and Freetype, because the existence of Xft implies the
+   existence of Freetype.
+
 v4.1-2 -- 14 Dec 2022
   -bug fix: when generating an EMF plot, completely transparent fills
    were previously not handled correctly if they followed a solid

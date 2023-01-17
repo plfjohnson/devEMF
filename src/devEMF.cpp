@@ -376,7 +376,7 @@ void CDevEMF::MetricInfo(int c, const pGEcontext gc, double* ascent,
         //last ditch attempt
         info = x_GetFontInfo(gc, "sans");
         if (info) {
-            Rf_warning("Using 'sans' font metrics instead of requested '%s'",
+            Rf_warning("devEMF: using 'sans' font metrics instead of requested '%s'",
                        gc->fontfamily);
         }
     }
@@ -794,13 +794,8 @@ void CDevEMF::TextUTF8(double x, double y, const char *str, double rot,
         //draw string -- have to convert UTF8 to UTF32
         unsigned int length = strlen(str);
         unsigned char len1, len2;
-        unsigned char arr[4];
         unsigned long ch1, ch2;
-        len2 = SSysFontInfo::UTF8codepointBytes(str[0]);
-        memset(arr, 0, 4); memcpy(arr + 4-len2, str, len2);
-        arr[4-len2] &= 255 >> len2;
-        ch2 = (arr[0] & 63) << 18  |  (arr[1] & 63) << 12  |
-            (arr[2] & 63) << 6  |  (arr[3] & 127);
+        ch2 = SSysFontInfo::UTF8toUTF32(str, &len2);
         for (unsigned int i = 0;  i < length;  i += len1) {
             len1 = len2; ch1 = ch2;
             EMFPLUS::SPath *path = new EMFPLUS::SPath;
@@ -810,11 +805,7 @@ void CDevEMF::TextUTF8(double x, double y, const char *str, double rot,
                                     R_BLUE(gc->col), R_ALPHA(gc->col));
             fill.Write(m_File);
             if (i + len1 < length) {
-                len2 = SSysFontInfo::UTF8codepointBytes(str[i+len1]);
-                memset(arr, 0, 4); memcpy(arr + 4-len2, str+i+len1, len2);
-                arr[4-len2] &= 255 >> len2;
-                ch2 = (arr[0] & 63) << 18  |  (arr[1] & 63) << 12  |
-                    (arr[2] & 63) << 6  |  (arr[3] & 127);
+                ch2 = SSysFontInfo::UTF8toUTF32(str+i+len1, &len2);
                 EMFPLUS::STranslateWorldTransform
                     advance(info->GetAdvance(ch1, ch2), 0);
                 advance.Write(m_File);
@@ -899,12 +890,23 @@ void CDevEMF::TextUTF8(double x, double y, const char *str, double rot,
                                           y-floor(sin(rot*M_PI/180)*textWidth*(1-hadj) + 0.5));
             }
         }
-        emr.emrtext.offString = 0; // fill in when serializing
-        emr.emrtext.options = 0; // from spec, seems should be eETO_NO_RECT, but office does seem to support this
+        emr.emrtext.options = 0; // from spec, seems should be eETO_NO_RECT, but office does not seem to support this
         emr.emrtext.rect.Set(0,0,0,0);
-        emr.emrtext.offDx = 0; //0 when not included (spec ambiguous but see https://social.msdn.microsoft.com/Forums/en-US/29e46348-c2eb-44d5-8d1a-47c1ecdc68ff/msemf-emrtextdxbuffer-is-optional-how-to-specify-its-not-specified?forum=os_windowsprotocols)
         emr.emrtext.str = iConvUTF8toUTF16LE(str);
         emr.emrtext.nChars = emr.emrtext.str.length()/2;//spec says number of characters, but both Word & LibreOffice implement #bytes/2 (i.e., they don't collapse unicode supplemental planes that require multiple surrogates)
+        // Below, calculate intercharacter spacing (spec implies this is optional, but Office 365 has difficulty exporting to pdf if missing and with text strings >=40 characters)
+        unsigned int length = strlen(str);
+        unsigned char len;
+        unsigned long prevCh, nextCh;
+        nextCh = SSysFontInfo::UTF8toUTF32(str, &len);
+        for (unsigned int i = len;  i < length;  i += len) {
+            prevCh = nextCh;
+            nextCh = SSysFontInfo::UTF8toUTF32(str+i, &len);
+            emr.emrtext.dx.push_back(info->GetAdvance(prevCh, nextCh));
+        }
+        //spec wants # advances = # characters, but maybe last is unused?
+        emr.emrtext.dx.push_back(info->GetAdvance(nextCh,nextCh));
+
         emr.Write(m_File);
         /* Commented out for same reason as above
         if (rot != 0) {

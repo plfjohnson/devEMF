@@ -81,17 +81,13 @@ else  # if linux/unix (not OSX)
       AC_SEARCH_LIBS(gzopen, z,
                      [CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1])
    fi
-   if (test "x$ac_cv_header_ft2build_h" == xyes); then
-      AC_SEARCH_LIBS(XftCharExists, Xft,
-                     [CPPFLAGS="${CPPFLAGS} -DHAVE_FREETYPE"])
-   fi
    if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
-      AC_SEARCH_LIBS(FT_Get_Char_Index, freetype,
+      AC_SEARCH_LIBS(XftCharExists, Xft,
                      [CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1])
    fi
 
    if test ${GOTZ} = 0  &&  test ${GOTX} = 0; then
-      AC_MSG_ERROR([Cannot find Xft.h or zlib.h! Please install the Xft or Zlib development headers and/or set XFT_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly.])
+      AC_MSG_ERROR([Cannot find Xft.h or zlib.h! Please install the Xft/FreeType or Zlib development headers and/or set XFT_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly.])
    fi
 
 fi

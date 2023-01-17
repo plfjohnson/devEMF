@@ -364,11 +364,10 @@ namespace EMF {
     struct SemrText {
         SPoint reference;
         unsigned int  nChars;
-        unsigned int  offString;
         unsigned int  options;
         SRect  rect;
-        unsigned int  offDx;
         std::string str;
+        std::vector<TUInt4> dx;
     };
     struct S_EXTTEXTOUTW : SRecord {
         SRect   bounds;
@@ -380,9 +379,19 @@ namespace EMF {
         std::string& Serialize(std::string &o) const {
             SRecord::Serialize(o) << bounds << TUInt4(graphicsMode) << exScale << eyScale << emrtext.reference << TUInt4(emrtext.nChars) <<
                 TUInt4(19*4) << //offset for string
-                TUInt4(emrtext.options) << emrtext.rect <<
-                TUInt4(emrtext.offDx);
-            o.append(emrtext.str);
+                TUInt4(emrtext.options) << emrtext.rect;
+            if (emrtext.dx.empty()) {
+                o << TUInt4(0); //dx offset 0 when not included (spec ambiguous but see https://social.msdn.microsoft.com/Forums/en-US/29e46348-c2eb-44d5-8d1a-47c1ecdc68ff/msemf-emrtextdxbuffer-is-optional-how-to-specify-its-not-specified?forum=os_windowsprotocols)
+                o.append(emrtext.str);
+            } else {
+                std::string strbuff = emrtext.str;
+                strbuff.resize(((strbuff.size() + 3)/4)*4, '\0'); //add padding
+                o << TUInt4(19*4 + strbuff.length());//calculate offset for dx
+                o.append(strbuff);
+                for (unsigned int i = 0;  i < emrtext.dx.size();  ++i) {
+                    o << emrtext.dx[i];
+                }
+            }
             return o;
 	}
     };
