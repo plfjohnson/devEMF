@@ -29,7 +29,6 @@
 */
 
 /**** *nix headers ****/
-#ifndef __APPLE__
 #ifndef WIN32
 #ifdef HAVE_ZLIB
 #include <zlib.h>
@@ -44,9 +43,7 @@
 #include FT_FREETYPE_H
 #include FT_OUTLINE_H
 #endif
-
 #endif /* end not windows */
-#endif /* end not mac */
 
 /**** windows headers ****/
 #ifdef WIN32
@@ -60,7 +57,7 @@
 #endif /* end WIN32 */
 
 /**** apple headers ****/
-#ifdef __APPLE__
+#ifdef HAVE_CORETEXT
 #include <CoreText/CTFont.h>
 #include <CoreText/CTFontDescriptor.h>
 #include <CoreFoundation/CFDictionary.h>
@@ -68,7 +65,7 @@
 #include <CoreFoundation/CFString.h>
 #undef TRUE //sigh..it's not just windows
 #undef FALSE
-#endif /* end __APPLE__ */
+#endif /* end apple with coretext */
 
 /****************************************************************************/
 // First make definitions common to all three systems
@@ -142,7 +139,7 @@ struct SSysFontInfo {
     }
     
     /******** *nix specific ********/
-#ifndef __APPLE__
+#ifndef HAVE_CORETEXT
 #ifndef WIN32
     
 #ifdef HAVE_ZLIB
@@ -527,7 +524,7 @@ std::string SSysFontInfo::packagePath;
 #endif
 
 #endif /* end not windows */
-#endif /* end not mac */
+#endif /* end not coretext (not apple) */
 
 /**** windows specific ****/
 #ifdef WIN32
@@ -686,7 +683,7 @@ std::string SSysFontInfo::packagePath;
 
 /**** apple specific ****/
 
-#ifdef __APPLE__
+#ifdef HAVE_CORETEXT
     CTFontRef m_FontInfo;
 
     SSysFontInfo(const SFontSpec& spec) : m_Spec(spec) {
@@ -764,4 +761,4 @@ std::string SSysFontInfo::packagePath;
     }
 };
 
-#endif /* end __APPLE__ */
+#endif /* end have coretext (apple) */

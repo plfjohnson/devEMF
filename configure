@@ -2050,8 +2050,8 @@ as_fn_append ac_header_cxx_list " sys/stat.h sys_stat_h HAVE_SYS_STAT_H"
 as_fn_append ac_header_cxx_list " sys/types.h sys_types_h HAVE_SYS_TYPES_H"
 as_fn_append ac_header_cxx_list " unistd.h unistd_h HAVE_UNISTD_H"
 as_fn_append ac_header_cxx_list " zlib.h zlib_h HAVE_ZLIB_H"
-as_fn_append ac_header_cxx_list " ft2build.h ft2build_h HAVE_FT2BUILD_H"
 as_fn_append ac_header_cxx_list " X11/Xft/Xft.h X11_Xft_Xft_h HAVE_X11_XFT_XFT_H"
+as_fn_append ac_header_cxx_list " CoreText/CTFont.h CoreText_CTFont_h HAVE_CORETEXT_CTFONT_H"
 # Check that the precious variables saved in the cache have kept the same
 # value.
 ac_cache_corrupted=false
@@ -2141,10 +2141,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 
 
 #-----------------------------------------------------------------------
-if test `uname -s` == "Darwin"; then # on OSX
-   LIBS="-framework CoreText"
-else  # if linux/unix (not OSX)
-   # Extract the first word of "pkg-config", so it can be a program name with args.
+# Extract the first word of "pkg-config", so it can be a program name with args.
 set dummy pkg-config; ac_word=$2
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $ac_word" >&5
 printf %s "checking for $ac_word... " >&6; }
@@ -2191,71 +2188,54 @@ fi
 
 
 
-   if test "xx$XFT_LIBS" == "xx"; then
-      if test "xx$PKGCONF" != "xx"; then
-         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about xft" >&5
+if test "xx$XFT_LIBS" == "xx"; then
+   if test "xx$PKGCONF" != "xx"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about xft" >&5
 printf %s "checking whether pkg-config knows about xft... " >&6; }
-         if "${PKGCONF}" --exists xft; then
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+      if "${PKGCONF}" --exists xft; then
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-            XFT_CFLAGS=`"${PKGCONF}" --cflags xft`
-            XFT_LIBS=`"${PKGCONF}" --libs xft`
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: XFT_CFLAGS=${XFT_CFLAGS}" >&5
+         XFT_CFLAGS=`"${PKGCONF}" --cflags xft`
+         XFT_LIBS=`"${PKGCONF}" --libs xft`
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: XFT_CFLAGS=${XFT_CFLAGS}" >&5
 printf "%s\n" "$as_me: XFT_CFLAGS=${XFT_CFLAGS}" >&6;}
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: XFT_LIBS=${XFT_LIBS}" >&5
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: XFT_LIBS=${XFT_LIBS}" >&5
 printf "%s\n" "$as_me: XFT_LIBS=${XFT_LIBS}" >&6;}
-         else
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+      else
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-         fi
       fi
    fi
+fi
 
 
-   if test "xx$FREETYPE_LIBS" == "xx"; then
-      if test "xx$PKGCONF" != "xx"; then
-         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about freetype2" >&5
-printf %s "checking whether pkg-config knows about freetype2... " >&6; }
-         if "${PKGCONF}" --exists freetype2; then
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
-printf "%s\n" "yes" >&6; }
-            FREETYPE_CFLAGS=`"${PKGCONF}" --cflags freetype2`
-            FREETYPE_LIBS=`"${PKGCONF}" --libs freetype2`
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: FREETYPE_CFLAGS=${FREETYPE_CFLAGS}" >&5
-printf "%s\n" "$as_me: FREETYPE_CFLAGS=${FREETYPE_CFLAGS}" >&6;}
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: FREETYPE_LIBS=${FREETYPE_LIBS}" >&5
-printf "%s\n" "$as_me: FREETYPE_LIBS=${FREETYPE_LIBS}" >&6;}
-         else
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
-printf "%s\n" "no" >&6; }
-         fi
-      fi
-   fi
-
-
-   if test "xx$Z_LIBS" == "xx"; then
-      if test "xx$PKGCONF" != "xx"; then
-         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about zlib" >&5
+if test "xx$ZLIB_LIBS" == "xx"; then
+   if test "xx$PKGCONF" != "xx"; then
+      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about zlib" >&5
 printf %s "checking whether pkg-config knows about zlib... " >&6; }
-         if "${PKGCONF}" --exists zlib; then
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
+      if "${PKGCONF}" --exists zlib; then
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-            ZLIB_CFLAGS=`"${PKGCONF}" --cflags zlib`
-            ZLIB_LIBS=`"${PKGCONF}" --libs zlib`
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: ZLIB_CFLAGS=${ZLIB_CFLAGS}" >&5
+         ZLIB_CFLAGS=`"${PKGCONF}" --cflags zlib`
+         ZLIB_LIBS=`"${PKGCONF}" --libs zlib`
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: ZLIB_CFLAGS=${ZLIB_CFLAGS}" >&5
 printf "%s\n" "$as_me: ZLIB_CFLAGS=${ZLIB_CFLAGS}" >&6;}
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: ZLIB_LIBS=${ZLIB_LIBS}" >&5
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: ZLIB_LIBS=${ZLIB_LIBS}" >&5
 printf "%s\n" "$as_me: ZLIB_LIBS=${ZLIB_LIBS}" >&6;}
-         else
-            { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+      else
+         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-         fi
       fi
    fi
+fi
 
+# below only applies to Mac/OSX
+if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
+   OSX_LIBS="-framework CoreText"
+fi
 
-   CPPFLAGS="${XFT_CFLAGS} ${FREETYPE_CFLAGS} ${ZLIB_CFLAGS}"
-   LIBS="${XFT_LIBS} ${FREETYPE_LIBS} ${ZLIB_LIBS}"
+CPPFLAGS="${XFT_CFLAGS} ${ZLIB_CFLAGS}"
+LIBS="${XFT_LIBS} ${ZLIB_LIBS} ${OSX_LIBS}"
 
 
 
@@ -2924,10 +2904,12 @@ fi
 
 
 
-   GOTZ=0
-   GOTX=0
-   if (test "x$ac_cv_header_zlib_h" == xyes); then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing gzopen" >&5
+
+GOTZ=0
+GOTX=0
+GOTCT=0
+if (test "x$ac_cv_header_zlib_h" == xyes); then
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing gzopen" >&5
 printf %s "checking for library containing gzopen... " >&6; }
 if test ${ac_cv_search_gzopen+y}
 then :
@@ -2985,9 +2967,9 @@ then :
   CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1
 fi
 
-   fi
-   if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
-      { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing XftCharExists" >&5
+fi
+if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing XftCharExists" >&5
 printf %s "checking for library containing XftCharExists... " >&6; }
 if test ${ac_cv_search_XftCharExists+y}
 then :
@@ -3045,12 +3027,71 @@ then :
   CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1
 fi
 
-   fi
+fi
+if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
+   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing CTFontGetGlyphsForCharacters" >&5
+printf %s "checking for library containing CTFontGetGlyphsForCharacters... " >&6; }
+if test ${ac_cv_search_CTFontGetGlyphsForCharacters+y}
+then :
+  printf %s "(cached) " >&6
+else $as_nop
+  ac_func_search_save_LIBS=$LIBS
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
 
-   if test ${GOTZ} = 0  &&  test ${GOTX} = 0; then
-      as_fn_error $? "Cannot find Xft.h or zlib.h! Please install the Xft/FreeType or Zlib development headers and/or set XFT_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly." "$LINENO" 5
-   fi
+namespace conftest {
+  extern "C" int CTFontGetGlyphsForCharacters ();
+}
+int
+main (void)
+{
+return conftest::CTFontGetGlyphsForCharacters ();
+  ;
+  return 0;
+}
+_ACEOF
+for ac_lib in ''
+do
+  if test -z "$ac_lib"; then
+    ac_res="none required"
+  else
+    ac_res=-l$ac_lib
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+  fi
+  if ac_fn_cxx_try_link "$LINENO"
+then :
+  ac_cv_search_CTFontGetGlyphsForCharacters=$ac_res
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.beam \
+    conftest$ac_exeext
+  if test ${ac_cv_search_CTFontGetGlyphsForCharacters+y}
+then :
+  break
+fi
+done
+if test ${ac_cv_search_CTFontGetGlyphsForCharacters+y}
+then :
 
+else $as_nop
+  ac_cv_search_CTFontGetGlyphsForCharacters=no
+fi
+rm conftest.$ac_ext
+LIBS=$ac_func_search_save_LIBS
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $ac_cv_search_CTFontGetGlyphsForCharacters" >&5
+printf "%s\n" "$ac_cv_search_CTFontGetGlyphsForCharacters" >&6; }
+ac_res=$ac_cv_search_CTFontGetGlyphsForCharacters
+if test "$ac_res" != no
+then :
+  test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
+  CPPFLAGS="${CPPFLAGS} -DHAVE_CORETEXT"; GOTCT=1
+fi
+
+fi
+
+if test ${GOTZ} = 0  &&  test ${GOTX} = 0  &&  test ${GOTCT} = 0; then
+   #only warn about Z and X because moot if missing CoreText
+   as_fn_error $? "Cannot find Xft.h or zlib.h! Please install the Xft or Zlib development headers and/or set XFT_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly." "$LINENO" 5
 fi
 
 ac_config_files="$ac_config_files src/Makevars"
