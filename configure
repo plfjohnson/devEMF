@@ -2235,7 +2235,7 @@ if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
 fi
 
 CPPFLAGS="${XFT_CFLAGS} ${ZLIB_CFLAGS}"
-LIBS="${XFT_LIBS} ${ZLIB_LIBS} ${OSX_LIBS}"
+LIBS="${XFT_LIBS} ${ZLIB_LIBS}"
 
 
 
@@ -3029,6 +3029,7 @@ fi
 
 fi
 if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
+   LIBS="${LIBS} ${OSX_LIBS}"
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing CTFontGetGlyphsForCharacters" >&5
 printf %s "checking for library containing CTFontGetGlyphsForCharacters... " >&6; }
 if test ${ac_cv_search_CTFontGetGlyphsForCharacters+y}
@@ -3085,6 +3086,8 @@ if test "$ac_res" != no
 then :
   test "$ac_res" = "none required" || LIBS="$ac_res $LIBS"
   CPPFLAGS="${CPPFLAGS} -DHAVE_CORETEXT"; GOTCT=1
+else $as_nop
+  LIBS="${XFT_LIBS} ${ZLIB_LIBS}"
 fi
 
 fi

@@ -54,7 +54,7 @@ if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
 fi
 
 CPPFLAGS="${XFT_CFLAGS} ${ZLIB_CFLAGS}"
-LIBS="${XFT_LIBS} ${ZLIB_LIBS} ${OSX_LIBS}"
+LIBS="${XFT_LIBS} ${ZLIB_LIBS}"
 
 AC_CHECK_HEADERS_ONCE(zlib.h)
 AC_CHECK_HEADERS_ONCE(X11/Xft/Xft.h)
@@ -73,8 +73,10 @@ if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
                   [CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1])
 fi
 if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
+   LIBS="${LIBS} ${OSX_LIBS}"
    AC_SEARCH_LIBS(CTFontGetGlyphsForCharacters, ,
-                  [CPPFLAGS="${CPPFLAGS} -DHAVE_CORETEXT"; GOTCT=1])
+                  [CPPFLAGS="${CPPFLAGS} -DHAVE_CORETEXT"; GOTCT=1],
+                  [LIBS="${XFT_LIBS} ${ZLIB_LIBS}"])
 fi
 
 if test ${GOTZ} = 0  &&  test ${GOTX} = 0  &&  test ${GOTCT} = 0; then
