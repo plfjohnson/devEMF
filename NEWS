@@ -1,4 +1,4 @@
-v4.3 -- 22 Mar 2023
+v4.3 -- 5 Apr 2023
   -modify autoconf configuration to explicitly test for CoreText on
    Apple platforms (since older OSX versions don't have CoreText) and
    allow use of zlib or xft on Apple if CoreText is unavailable.

@@ -2,7 +2,7 @@ Package: devEMF
 Type: Package
 Title: EMF Graphics Output Device
 Version: 4.3
-Date: 2023-03-22
+Date: 2023-04-05
 Author: Philip Johnson
 Maintainer: Philip Johnson <plfj@umd.edu> 
 Depends: R (>= 2.10.1)
