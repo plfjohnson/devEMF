@@ -1,3 +1,11 @@
+v4.3-1 -- 14 Apr 2023
+  -changes in v4.3 did not consider the possibility that a *compiling*
+   Mac might have different libraries available than the *installing*
+   Mac (as can be the case when the package is built by CRAN and
+   installed by users as a binary).  This version works around this
+   problem by explicitly not trying to use xlib or xft if CoreText is
+   available.
+
 v4.3 -- 5 Apr 2023
   -modify autoconf configuration to explicitly test for CoreText on
    Apple platforms (since older OSX versions don't have CoreText) and

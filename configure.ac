@@ -54,8 +54,6 @@ if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
 fi
 
 CPPFLAGS="${XFT_CFLAGS} ${ZLIB_CFLAGS}"
-LIBS="${XFT_LIBS} ${ZLIB_LIBS}"
-
 AC_CHECK_HEADERS_ONCE(zlib.h)
 AC_CHECK_HEADERS_ONCE(X11/Xft/Xft.h)
 AC_CHECK_HEADERS_ONCE(CoreText/CTFont.h)
@@ -64,19 +62,32 @@ AC_CHECK_HEADERS_ONCE(CoreText/CTFont.h)
 GOTZ=0
 GOTX=0
 GOTCT=0
-if (test "x$ac_cv_header_zlib_h" == xyes); then
-   AC_SEARCH_LIBS(gzopen, z,
-                  [CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1])
-fi
-if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
-   AC_SEARCH_LIBS(XftCharExists, Xft,
-                  [CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1])
-fi
 if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
-   LIBS="${LIBS} ${OSX_LIBS}"
+   GOODLIBS="${LIBS}"
+   LIBS="${GOODLIBS} ${OSX_LIBS}"
    AC_SEARCH_LIBS(CTFontGetGlyphsForCharacters, ,
                   [CPPFLAGS="${CPPFLAGS} -DHAVE_CORETEXT"; GOTCT=1],
-                  [LIBS="${XFT_LIBS} ${ZLIB_LIBS}"])
+                  [LIBS="${GOODLIBS}"])
+fi
+
+# below GOTCT conditional works around case when compiling Mac has
+# extra libraries installed that are not present (non-default) on
+# installation computer
+if test ${GOTCT} = 0; then
+   if (test "x$ac_cv_header_zlib_h" == xyes); then
+      GOODLIBS="${LIBS}"
+      LIBS="${GOODLIBS} ${ZLIB_LIBS}"
+      AC_SEARCH_LIBS(gzopen, z,
+                     [CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1],
+                     [LIBS="${GOODLIBS}"])
+   fi
+   if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
+      GOODLIBS="${LIBS}"
+      LIBS="${GOODLIBS} ${XFT_LIBS}"
+      AC_SEARCH_LIBS(XftCharExists, Xft,
+                     [CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1],
+                     [LIBS="${GOODLIBS}"])
+   fi
 fi
 
 if test ${GOTZ} = 0  &&  test ${GOTX} = 0  &&  test ${GOTCT} = 0; then
