@@ -17,15 +17,15 @@ AC_LANG(C++)
 #-----------------------------------------------------------------------
 AC_PATH_PROG([PKGCONF],[pkg-config],[],[$PATH:/usr/local/bin:ext/bin:ext:/sw/bin:/opt/bin])
 
-if test "xx$XFT_LIBS" == "xx"; then
+if test "xx$FONTCONFIG_LIBS" == "xx"; then
    if test "xx$PKGCONF" != "xx"; then
-      AC_MSG_CHECKING([whether pkg-config knows about xft])
-      if "${PKGCONF}" --exists xft; then
+      AC_MSG_CHECKING([whether pkg-config knows about Fontconfig])
+      if "${PKGCONF}" --exists fontconfig; then
          AC_MSG_RESULT([yes])
-         XFT_CFLAGS=`"${PKGCONF}" --cflags xft`
-         XFT_LIBS=`"${PKGCONF}" --libs xft`
-         AC_MSG_NOTICE([XFT_CFLAGS=${XFT_CFLAGS}])
-         AC_MSG_NOTICE([XFT_LIBS=${XFT_LIBS}])
+         FONTCONFIG_CFLAGS=`"${PKGCONF}" --cflags fontconfig`
+         FONTCONFIG_LIBS=`"${PKGCONF}" --libs fontconfig`
+         AC_MSG_NOTICE([FONTCONFIG_CFLAGS=${FONTCONFIG_CFLAGS}])
+         AC_MSG_NOTICE([FONTCONFIG_LIBS=${FONTCONFIG_LIBS}])
       else
          AC_MSG_RESULT([no])
       fi
@@ -53,14 +53,14 @@ if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
    OSX_LIBS="-framework CoreText"
 fi
 
-CPPFLAGS="${XFT_CFLAGS} ${ZLIB_CFLAGS}"
+CPPFLAGS="${FONTCONFIG_CFLAGS} ${ZLIB_CFLAGS}"
 AC_CHECK_HEADERS_ONCE(zlib.h)
-AC_CHECK_HEADERS_ONCE(X11/Xft/Xft.h)
+AC_CHECK_HEADERS_ONCE(fontconfig/fontconfig.h)
 AC_CHECK_HEADERS_ONCE(CoreText/CTFont.h)
 
 
 GOTZ=0
-GOTX=0
+GOTFC=0
 GOTCT=0
 if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
    GOODLIBS="${LIBS}"
@@ -81,18 +81,18 @@ if test ${GOTCT} = 0; then
                      [CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1],
                      [LIBS="${GOODLIBS}"])
    fi
-   if (test "x$ac_cv_header_X11_Xft_Xft_h" == xyes); then
+   if (test "x$ac_cv_header_fontconfig_fontconfig_h" == xyes); then
       GOODLIBS="${LIBS}"
-      LIBS="${GOODLIBS} ${XFT_LIBS}"
-      AC_SEARCH_LIBS(XftCharExists, Xft,
-                     [CPPFLAGS="${CPPFLAGS} -DHAVE_XFT"; GOTX=1],
+      LIBS="${GOODLIBS} ${FONTCONFIG_LIBS}"
+      AC_SEARCH_LIBS(FcFontMatch, ,
+                     [CPPFLAGS="${CPPFLAGS} -DHAVE_FONTCONFIG"; GOTFC=1],
                      [LIBS="${GOODLIBS}"])
    fi
 fi
 
-if test ${GOTZ} = 0  &&  test ${GOTX} = 0  &&  test ${GOTCT} = 0; then
+if test ${GOTZ} = 0  &&  test ${GOTFC} = 0  &&  test ${GOTCT} = 0; then
    #only warn about Z and X because moot if missing CoreText
-   AC_MSG_ERROR([Cannot find Xft.h or zlib.h! Please install the Xft or Zlib development headers and/or set XFT_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly.])
+   AC_MSG_ERROR([Cannot find fontconfig.h or zlib.h! Please install the fontconfig or Zlib development headers and/or set FONTCONFIG_CFLAGS/LIBS or ZLIB_CFLAGS/LIBS correspondingly.])
 fi
 
 AC_CONFIG_FILES([src/Makevars])

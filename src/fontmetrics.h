@@ -37,11 +37,10 @@
 #include <sstream>
 #include <map>
 #endif
-#ifdef HAVE_XFT
-#include <X11/Xft/Xft.h>
-#include <ft2build.h>
-#include FT_FREETYPE_H
-#include FT_OUTLINE_H
+#ifdef HAVE_FONTCONFIG
+#include <fontconfig/fontconfig.h>
+#include <freetype/freetype.h>
+#include <freetype/ftoutln.h>
 #endif
 #endif /* end not windows */
 
@@ -172,9 +171,15 @@ struct SSysFontInfo {
     typedef std::map<SCharPair, double> TKerningTable;
     TKerningTable m_AFMKerningTable;
 #endif
-#ifdef HAVE_XFT
-    static Display *s_XDisplay; //global connection to X server
-    XftFont *m_FontInfo;
+#ifdef HAVE_FONTCONFIG
+    struct SFontconfig {
+        SFontconfig(void)  {FcInit(); FT_Init_FreeType(&m_FTlibrary); }
+        ~SFontconfig(void) {FT_Done_FreeType(m_FTlibrary); FcFini();}
+        FT_Library m_FTlibrary;
+    };
+    static SFontconfig m_Fontconfig;
+    FT_Face m_FontInfo;
+
 #endif
 
     SSysFontInfo(const SFontSpec& spec) : m_Spec(spec) {
@@ -219,56 +224,61 @@ struct SSysFontInfo {
             packagePath = CHAR(STRING_ELT(res, 0));
         }
 #endif
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
         m_FontInfo = NULL;
-        if (!s_XDisplay) {
-            s_XDisplay = XOpenDisplay(NULL);
-            if (!s_XDisplay) {
-#ifndef HAVE_ZLIB
-                Rf_error("Can't open connection to X server to read font "
-                         "metric information (and devEMF was not compiled "
-                         "with zlib support to allow pulling metrics from "
-                         "file).");
-#endif
-            }
-        }
-#endif
 
-#ifdef HAVE_XFT
-        if (s_XDisplay) {
-            m_FontInfo = XftFontOpen
-                (s_XDisplay, XDefaultScreen(s_XDisplay),
-                 XFT_FAMILY, XftTypeString, m_Spec.m_Family.c_str(),
-                 XFT_PIXEL_SIZE, XftTypeInteger, m_Spec.m_Size,
-                 XFT_SLANT, XftTypeInteger, (m_Spec.m_Face == 3  ||
-                                             m_Spec.m_Face == 4 ?
-                                             XFT_SLANT_ITALIC :
-                                             XFT_SLANT_ROMAN),
-                 XFT_WEIGHT, XftTypeInteger, (m_Spec.m_Face == 2  ||
-                                              m_Spec.m_Face == 4 ?
-                                              XFT_WEIGHT_BOLD :
-                                              XFT_WEIGHT_MEDIUM),
-                 NULL);
-            if (m_FontInfo) {
-                FT_Face face = XftLockFace(m_FontInfo);
-                if (m_Spec.m_Family != face->family_name) {
-                    Rf_warning("devEMF: your system substituted font family '%s' when you requested '%s'",
-                               face->family_name, m_Spec.m_Family.c_str());
-                }
-                XftUnlockFace(m_FontInfo);
+        FcPattern *pattern = FcPatternBuild
+            (NULL,
+             FC_FAMILY, FcTypeString, m_Spec.m_Family.c_str(),
+             FC_PIXEL_SIZE, FcTypeInteger, m_Spec.m_Size,
+             FC_SLANT, FcTypeInteger, (m_Spec.m_Face == 3  ||
+                                       m_Spec.m_Face == 4 ?
+                                       FC_SLANT_ITALIC :
+                                       FC_SLANT_ROMAN),
+             FC_WEIGHT, FcTypeInteger, (m_Spec.m_Face == 2  ||
+                                        m_Spec.m_Face == 4 ?
+                                        FC_WEIGHT_BOLD :
+                                        FC_WEIGHT_MEDIUM),
+             NULL);
+        FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+        FcDefaultSubstitute(pattern);
+        FcResult res;
+        FcPattern *font = FcFontMatch(NULL, pattern, &res);
+        if (res == FcResultMatch) {
+            char *family;
+            FcPatternGetString(font, FC_FAMILY, 0, (FcChar8**)&family);
+            if (m_Spec.m_Family != family) {
+                Rf_warning("devEMF: your system substituted font family '%s' when you requested '%s'",
+                           family, m_Spec.m_Family.c_str());
+            }
+
+            //load actual font face
+            char* filename;
+            int index;
+            bool fontLoaded = (FcPatternGetString(font, FC_FILE, 0, (FcChar8**)&filename) == FcResultMatch  &&
+                               FcPatternGetInteger(font, FC_INDEX, 0, &index) == FcResultMatch &&
+                               FT_New_Face(m_Fontconfig.m_FTlibrary, filename, index, &m_FontInfo) == 0);
+            FcPatternDestroy(pattern);
+            FcPatternDestroy(font);
+            if (fontLoaded) {
+                FT_Matrix transform; //flip glyph y axis to match emf's coord system
+                transform.xx = 65536; transform.xy = 0;
+                transform.yx = 0; transform.yy = -65536;
+                FT_Set_Transform(m_FontInfo, &transform, NULL);
+                FT_Set_Pixel_Sizes(m_FontInfo, m_Spec.m_Size, 0);
                 return;
-            } //otherwise proceed to AFM files
+            }
         }
 #endif
 #ifdef HAVE_ZLIB
         if (afmPathDB.find(m_Spec.m_Family) == afmPathDB.end()  ||
             afmPathDB[m_Spec.m_Family].size() < m_Spec.m_Face) {
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
             Rf_warning("devEMF: font metric information not found for family '%s'; "
                        "using 'Helvetica' instead", m_Spec.m_Family.c_str());
 #else
             Rf_warning("devEMF: font metric information not available for family '%s'; "
-                       "using 'Helvetica' instead (consider installing Xft through a system level-package called 'libxft-dev' or similar and then reinstall the devEMF package).", m_Spec.m_Family.c_str());
+                       "using 'Helvetica' instead (consider installing fontconfig through a system level package called 'libfontconfig-dev' or similar and then reinstall the devEMF package).", m_Spec.m_Family.c_str());
 #endif
 
             //last-ditch substitute with "Helvetica"
@@ -293,10 +303,10 @@ struct SSysFontInfo {
         }
 #endif
     }
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
     ~SSysFontInfo() {
         if (m_FontInfo) {
-            XftFontClose(s_XDisplay, m_FontInfo);
+            FT_Done_Face(m_FontInfo);
         }
     }
 #endif
@@ -359,9 +369,9 @@ struct SSysFontInfo {
 #endif
 
     bool HasChar(unsigned int c) const {
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
         if (m_FontInfo) {
-            return XftCharExists(s_XDisplay, m_FontInfo, c);
+            return FT_Get_Char_Index(m_FontInfo, c) != 0;
         } else {
             return false;
         }
@@ -371,7 +381,7 @@ struct SSysFontInfo {
 #endif
     }
     
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
     struct SPathOutlineFuncs : public FT_Outline_Funcs {
         SPathOutlineFuncs(void) {
             move_to = (FT_Outline_MoveToFunc) MoveTo;
@@ -415,47 +425,38 @@ struct SSysFontInfo {
 #endif
 
     void AppendGlyphPath(unsigned int c, EMFPLUS::SPath &path) const {
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
         if (!m_FontInfo) {
-            Rf_error("devEMF: font (%s) not found by Xft so can't embed fonts!",
+            Rf_error("devEMF: font (%s) not found by fontconfig so can't embed fonts!",
                      m_Spec.m_Family.c_str());
         }
-        FT_Face face = XftLockFace(m_FontInfo);
-        FT_Matrix transform; //note flipping around y for emf's coord system
-        transform.xx = 65536; transform.xy = 0;
-        transform.yx = 0; transform.yy = -65536;
-        FT_Set_Transform(face, &transform, NULL);
-        FT_Set_Pixel_Sizes(face, m_Spec.m_Size, 0);
-        int err = FT_Load_Char(face, c, FT_LOAD_NO_BITMAP);
+        int err = FT_Load_Char(m_FontInfo, c, FT_LOAD_NO_BITMAP|FT_LOAD_TARGET_LIGHT);
         if (err != 0) {
             Rf_warning("devEMF: could not find font outline for embedding '%c'",c);
         }
-        if (face->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
+        if (m_FontInfo->glyph->format == FT_GLYPH_FORMAT_OUTLINE) {
             SPathOutlineFuncs myFuncs;
-            FT_Outline_Decompose(&face->glyph->outline,
+            FT_Outline_Decompose(&m_FontInfo->glyph->outline,
                                  &myFuncs, &path);
         }
-        XftUnlockFace(m_FontInfo);
         //Rprintf("totalpts: %d\n", path.m_TotalPts);
         return;
 #endif
-        Rf_error("devEMF: Font to path conversion requires devEMF to be compiled with Xft and FreeType (perhaps you need to first install system level-packages called 'libxft-dev' and 'libfreetype-dev' and then reinstall the devEMF package).");
+        Rf_error("devEMF: Font to path conversion requires devEMF to be compiled with fontconfig (perhaps you need to first install a system level package called 'libfontconfig-dev' and then reinstall the devEMF package).");
     }
 
     // actual advance (accounting for kerning!)
     double GetAdvance(unsigned long prevC, unsigned long nextC) const {
-#ifdef HAVE_XFT
+#ifdef HAVE_FREETYPE
         if (m_FontInfo) {
-            FT_Face face = XftLockFace(m_FontInfo);
-            //Rprintf("\nsize scaling:  %u, %i,%i, %f, %f\n", face->units_per_EM, face->size->metrics.x_ppem, face->size->metrics.y_ppem, face->size->metrics.x_scale/(double) 65536, face->size->metrics.y_scale / (double) 65536);
-            unsigned int prevI = FT_Get_Char_Index(face, prevC);
-            unsigned int nextI = FT_Get_Char_Index(face, nextC);
+            //Rprintf("\nsize scaling:  %u, %i,%i, %f, %f\n", m_FontInfo->units_per_EM, m_FontInfo->size->metrics.x_ppem, m_FontInfo->size->metrics.y_ppem, m_FontInfo->size->metrics.x_scale/(double) 65536, m_FontInfo->size->metrics.y_scale / (double) 65536);
+            unsigned int prevI = FT_Get_Char_Index(m_FontInfo, prevC);
+            unsigned int nextI = FT_Get_Char_Index(m_FontInfo, nextC);
             FT_Vector kerning;
-            FT_Get_Kerning(face, prevI, nextI, FT_KERNING_DEFAULT, &kerning);
-            XftUnlockFace(m_FontInfo);
-            FT_Load_Glyph(face, prevI, FT_LOAD_NO_BITMAP);
-            //Rprintf("kkkerning %u %u %f %f %f\n", prevC, nextC, face->glyph->advance.x/(double)64, kerning.x/(double)64, face->glyph->linearHoriAdvance/(double)65536);
-            return (face->glyph->advance.x + (face->glyph->lsb_delta - face->glyph->rsb_delta) + kerning.x)/(double)64;
+            FT_Get_Kerning(m_FontInfo, prevI, nextI, FT_KERNING_DEFAULT, &kerning);
+            FT_Load_Glyph(m_FontInfo, prevI, FT_LOAD_NO_BITMAP|FT_LOAD_TARGET_LIGHT);
+            //Rprintf("kkkerning %u %u %f %f %f\n", prevC, nextC, m_FontInfo->glyph->advance.x/(double)64, kerning.x/(double)64, m_FontInfo->glyph->linearHoriAdvance/(double)65536);
+            return (m_FontInfo->glyph->advance.x + (m_FontInfo->glyph->lsb_delta - m_FontInfo->glyph->rsb_delta) + kerning.x)/(double)64;
         }
 #endif
         double wid = 0;
@@ -473,15 +474,14 @@ struct SSysFontInfo {
     
     void GetMetrics(unsigned int c, 
                     double &ascent, double &descent, double &width) const {
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
         if (m_FontInfo) {
-            XGlyphInfo extents;
-            XftTextExtents32(s_XDisplay, m_FontInfo, &c, 1, &extents);
-            // See below URL for interpreting XFT extents
-            // http://ns.keithp.com/pipermail/fontconfig/2003-June/000492.html
-            ascent = extents.y;
-            descent = extents.height-extents.y;
-            width = extents.xOff;
+            if (FT_Load_Char(m_FontInfo, c, FT_LOAD_NO_BITMAP|FT_LOAD_TARGET_LIGHT) != 0) {
+                Rf_warning("devEMF: could not find character metric information for '%c'",c);
+            }
+            ascent = m_FontInfo->glyph->metrics.horiBearingY/(double)64;
+            descent = (m_FontInfo->glyph->metrics.height - m_FontInfo->glyph->metrics.horiBearingY)/(double)64;
+            width = m_FontInfo->glyph->metrics.horiAdvance/(double)64;
             return;
         }
 #endif
@@ -500,10 +500,10 @@ struct SSysFontInfo {
     }
     void GetFontBBox(double &ascent, double &descent, double &width) {
         ascent = descent = width = 0;
-#ifdef HAVE_XFT
+#ifdef HAVE_FONTCONFIG
         if (m_FontInfo) {
-            ascent = m_FontInfo->ascent;
-            descent = m_FontInfo->descent;
+            ascent = m_FontInfo->ascender;
+            descent = m_FontInfo->descender;
             width = m_FontInfo->max_advance_width;
             return;
         }
@@ -515,8 +515,8 @@ struct SSysFontInfo {
 #endif        
     }
 };
-#ifdef HAVE_XFT
-Display* SSysFontInfo::s_XDisplay = NULL; //global connection to X server
+#ifdef HAVE_FONTCONFIG
+SSysFontInfo::SFontconfig SSysFontInfo::m_Fontconfig;// initialize & close at program start/end
 #endif
 #ifdef HAVE_ZLIB
 std::map<std::string, std::vector<std::string> > SSysFontInfo::afmPathDB;
