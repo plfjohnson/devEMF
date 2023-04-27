@@ -1,6 +1,8 @@
 v4.4 -- 26 Apr 2023
   -avoid linux font metric dependency on Xft, which requires a
    connection to an X server, and instead directly use Fontconfig.
+  -fixed a typo that prevented multiple font families from being used
+   in the same plot.
 
 v4.3-1 -- 14 Apr 2023
   -changes in v4.3 did not consider the possibility that a *compiling*

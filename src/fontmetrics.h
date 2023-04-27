@@ -74,7 +74,6 @@
 namespace EMFPLUS { //forward declaration to avoid circularity..
 struct SPath;
 }
-
 struct SSysFontInfo {
     struct SFontSpec {
         std::string m_Family;
@@ -87,7 +86,7 @@ struct SSysFontInfo {
             }
         }
         friend bool operator< (const SFontSpec &s1, const SFontSpec &s2) {
-            int cmp = s1.m_Family.compare(s1.m_Family);
+            int cmp = s1.m_Family.compare(s2.m_Family);
             if (cmp < 0) {
                 return true;
             }
