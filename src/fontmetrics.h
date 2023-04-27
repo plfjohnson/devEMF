@@ -39,8 +39,9 @@
 #endif
 #ifdef HAVE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
-#include <freetype/freetype.h>
-#include <freetype/ftoutln.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include FT_OUTLINE_H
 #endif
 #endif /* end not windows */
 
