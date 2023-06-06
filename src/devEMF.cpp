@@ -419,8 +419,8 @@ bool CDevEMF::Open(const char* filename, int width, int height)
         EMF::SHeader emr;
         emr.bounds.Set(0,0,m_Width,m_Height); //device units
         emr.frame.Set(0,0, // units of 0.01mm
-                      2540*m_Width/Inches2Dev(1),
-                      2540*m_Height/Inches2Dev(1)); 
+                      m_Width * (2540./Inches2Dev(1)) + 0.5,//round
+                      m_Height * (2540./Inches2Dev(1)) + 0.5);//round
         emr.signature = 0x464D4520;
         emr.version = 0x00010000;
         emr.nBytes = 0;   //WILL EDIT WHEN CLOSING
@@ -455,9 +455,9 @@ bool CDevEMF::Open(const char* filename, int width, int height)
         emr.nDescription = emr.desc.length()/2;
         emr.offDescription = 0; //set during serialization
         emr.nPalEntries = 0;
-        emr.device.Set(m_Width,m_Height);
-        emr.millimeters.Set(m_Width * (25.4/Inches2Dev(1)),
-                            m_Height * (25.4/Inches2Dev(1)));
+        emr.device.Set(m_Width, m_Height);
+        emr.millimeters.Set(m_Width * (25.4/Inches2Dev(1)) + 0.5,//round
+                            m_Height * (25.4/Inches2Dev(1)) + 0.5);//round
         emr.cbPixelFormat=0x00000000;
         emr.offPixelFormat=0x00000000;
         emr.bOpenGL=0x00000000;
@@ -474,8 +474,9 @@ bool CDevEMF::Open(const char* filename, int width, int height)
             emr.dpiY = Inches2Dev(1);
             emr.Write(m_File);
         }
-        { // page transform (1 pixel == 1 device unit)
-            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitPixel, 1);
+        { // page transform
+            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitPixel,
+                                           1./Inches2Dev(1));
             emr.Write(m_File);
         }
         {// use decent anti-aliasing (key for viewing in MS Office)
@@ -495,7 +496,7 @@ bool CDevEMF::Open(const char* filename, int width, int height)
     }
 
     if (!m_UseEMFPlus  ||  !m_UseEMFPlusFont  ||  !m_UseEMFPlusRaster) {
-        {// page transform (1 pixel == 1 device unit)
+        {// mapping mode (1 logical unit == 1 device unit)
             EMF::S_SETMAPMODE emr;
             emr.mode = EMF::eMM_TEXT;
             emr.Write(m_File);
