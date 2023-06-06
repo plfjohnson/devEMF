@@ -475,7 +475,7 @@ bool CDevEMF::Open(const char* filename, int width, int height)
             emr.Write(m_File);
         }
         { // page transform
-            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitPixel,
+            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitInch,
                                            1./Inches2Dev(1));
             emr.Write(m_File);
         }
