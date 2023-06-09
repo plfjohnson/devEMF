@@ -28,8 +28,8 @@ emf <- function(file = "Rplot.emf", width=7, height=7, units=c("in","cm","mm"),
         width = width / 2.54
         height = height / 2.54
     } else if (units == "mm") {
-        width = width / 254
-        height = height / 254
+        width = width / 25.4
+        height = height / 25.4
     }
     if (emfPlusFont  &&  emfPlusFontToPath) {
         stop("emf: at most one of 'emfPlusFont' and 'emfPlusFontToPath' can be TRUE")

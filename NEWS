@@ -3,8 +3,9 @@ v4.4 -- ?
    connection to an X server, and instead directly use Fontconfig.
   -fixed a typo that prevented multiple font families from being used
    in the same plot.
-  -round instead of truncate when converting between units to
-   calculate dimensions in EMF header
+  -round instead of truncate when converting from logical units to mm
+   to calculate dimensions in EMF header
+  -fix typo when specifying figure width and height in mm
 
 v4.3-1 -- 14 Apr 2023
   -changes in v4.3 did not consider the possibility that a *compiling*

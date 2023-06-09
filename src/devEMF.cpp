@@ -419,8 +419,8 @@ bool CDevEMF::Open(const char* filename, int width, int height)
         EMF::SHeader emr;
         emr.bounds.Set(0,0,m_Width,m_Height); //device units
         emr.frame.Set(0,0, // units of 0.01mm
-                      m_Width * (2540./Inches2Dev(1)) + 0.5,//round
-                      m_Height * (2540./Inches2Dev(1)) + 0.5);//round
+                      m_Width * (2540./Inches2Dev(1)),
+                      m_Height * (2540./Inches2Dev(1)));
         emr.signature = 0x464D4520;
         emr.version = 0x00010000;
         emr.nBytes = 0;   //WILL EDIT WHEN CLOSING
@@ -456,8 +456,8 @@ bool CDevEMF::Open(const char* filename, int width, int height)
         emr.offDescription = 0; //set during serialization
         emr.nPalEntries = 0;
         emr.device.Set(m_Width, m_Height);
-        emr.millimeters.Set(m_Width * (25.4/Inches2Dev(1)) + 0.5,//round
-                            m_Height * (25.4/Inches2Dev(1)) + 0.5);//round
+        emr.millimeters.Set(m_Width * (25.4/Inches2Dev(1)) + 0.5, //round
+                            m_Height * (25.4/Inches2Dev(1)) + 0.5); //round
         emr.cbPixelFormat=0x00000000;
         emr.offPixelFormat=0x00000000;
         emr.bOpenGL=0x00000000;

@@ -88,7 +88,17 @@ emf(file = "Rplot.emf", width = 7, height = 7, units = c("in", "cm", "mm"),
     \item EMF (as opposed to EMF+) raster rendering does not support
   interpolation control.
     \item EMF (as opposed to EMF+) does not support an alpha channel.
-    \item Path rendering is not implemented for EMF (as opposed to EMF+).
+    \item Path rendering is not implemented for EMF (as opposed to
+    EMF+).
+    \item The EMF/EMF+ specification needs logical bounds in integer
+  units of mm, but needs the graphic frame bounds in integer units of
+  0.01mm.  This discrepancy can create a small gap at the right and
+  bottom edges of the graphic.  If you need to make a graphic full-bleed
+  with no gap at all, set the logical DPI very high (>1000) and specify
+  figure width and height in integer units of mm.  If using Microsoft
+  Office to view the graphic, you'll need to shrink the bounds by a few
+  0.01mm (subtracting 0.04mm appears sufficient) to completely eliminate
+  the gap.
   }
 }
 \author{
