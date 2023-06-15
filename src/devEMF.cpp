@@ -19,10 +19,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-
-    If building library outside of R package (i.e. for debugging):
-        MAKEFLAGS="CPPFLAGS=`pkg-config --cflags xft` PKG_LIBS=`pkg-config --libs xft`" R CMD SHLIB '*.cpp'
-
     --------------------------------------------------------------------------
 */
 

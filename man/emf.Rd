@@ -63,12 +63,12 @@ emf(file = "Rplot.emf", width = 7, height = 7, units = c("in", "cm", "mm"),
   graphics paths and makes the resulting EMF+ files truly portable
   (although text strings will no longer be editable by downstream
   programs).  This option is currently only implemented for Linux (with
-  FreeType and Xft installed) and Windows.  Contact the author if you'd
+  Fontconfig installed) and Windows.  Contact the author if you'd
   like to request implementation on Apple.
 
   EMF/EMF+ supports Unicode characters, and this package tries to
   maintain that support as well.  However, font metric information is
-  system dependent and on linux depends on FreeType or XFT being
+  system dependent and on linux depends on Fontconfig being
   installed.  Regardless, basic font metrics for the standard Adobe
   PostScript font families are built into this package.
 
@@ -93,12 +93,12 @@ emf(file = "Rplot.emf", width = 7, height = 7, units = c("in", "cm", "mm"),
     \item The EMF/EMF+ specification needs logical bounds in integer
   units of mm, but needs the graphic frame bounds in integer units of
   0.01mm.  This discrepancy can create a small gap at the right and
-  bottom edges of the graphic.  If you need to make a graphic full-bleed
-  with no gap at all, set the logical DPI very high (>1000) and specify
-  figure width and height in integer units of mm.  If using Microsoft
-  Office to view the graphic, you'll need to shrink the bounds by a few
-  0.01mm (subtracting 0.04mm appears sufficient) to completely eliminate
-  the gap.
+  bottom edges of the graphic.  If you need to make a graphic precisely
+  full-bleed with no gap (and no cropping), set the logical DPI high
+  (perhaps 1000) and specify figure width and height in integer units of
+  mm.  If using Microsoft Office to view the graphic, you'll need to
+  shrink the bounds by a few 0.01mm (subtracting 0.04mm appears
+  sufficient) to completely eliminate the gap.
   }
 }
 \author{

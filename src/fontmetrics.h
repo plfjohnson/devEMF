@@ -173,13 +173,19 @@ struct SSysFontInfo {
 #endif
 #ifdef HAVE_FONTCONFIG
     struct SFontconfig {
-        SFontconfig(void)  {FcInit(); FT_Init_FreeType(&m_FTlibrary); }
-        ~SFontconfig(void) {FT_Done_FreeType(m_FTlibrary); FcFini();}
+        SFontconfig(void)  {
+            m_FCconfig = FcInitLoadConfigAndFonts();
+            FT_Init_FreeType(&m_FTlibrary);
+        }
+        ~SFontconfig(void) {
+            FT_Done_FreeType(m_FTlibrary);
+            FcConfigDestroy(m_FCconfig);
+        }
+        FcConfig *m_FCconfig;
         FT_Library m_FTlibrary;
     };
     static SFontconfig m_Fontconfig;
     FT_Face m_FontInfo;
-
 #endif
 
     SSysFontInfo(const SFontSpec& spec) : m_Spec(spec) {
@@ -240,10 +246,10 @@ struct SSysFontInfo {
                                         FC_WEIGHT_BOLD :
                                         FC_WEIGHT_MEDIUM),
              NULL);
-        FcConfigSubstitute(NULL, pattern, FcMatchPattern);
+        FcConfigSubstitute(m_Fontconfig.m_FCconfig, pattern, FcMatchPattern);
         FcDefaultSubstitute(pattern);
         FcResult res;
-        FcPattern *font = FcFontMatch(NULL, pattern, &res);
+        FcPattern *font = FcFontMatch(m_Fontconfig.m_FCconfig, pattern, &res);
         if (res == FcResultMatch) {
             char *family;
             FcPatternGetString(font, FC_FAMILY, 0, (FcChar8**)&family);

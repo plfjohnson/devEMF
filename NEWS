@@ -1,4 +1,4 @@
-v4.4 -- ?
+v4.4 -- 14 June 2023
   -avoid linux font metric dependency on Xft, which requires a
    connection to an X server, and instead directly use Fontconfig.
   -fixed a typo that prevented multiple font families from being used

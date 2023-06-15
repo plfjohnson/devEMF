@@ -22,7 +22,7 @@ The resulting package will be named devEMF_XXX.tar.gz where XXX is replaced with
 
 #### Compiling
 
-R will automatically compile the underlying C++ code during installation.  On Windows and MacOS there are no additional dependancies.  On other systems, some basic dependencies are required to access the font metric information necessary to place text.  If [FreeType](https://freetype.org/) or [Xft](https://www.freedesktop.org/wiki/Software/Xft/) are available (perhaps through installing an operating system package called libfreetype-dev or libxft-dev), then devEMF can access font metric information for any installed font; if neither FreeType nor Xft are available, devEMF will attempt to use [zlib](https://www.zlib.net/) to access font metric information from the 14 core Adobe fonts included in devEMF under inst/.
+R will automatically compile the underlying C++ code during installation.  On Windows and MacOS there are no additional dependancies.  On other systems, some basic dependencies are required to access the font metric information necessary to place text.  If [Fontconfig](https://www.freedesktop.org/wiki/Software/fontconfig/) is available (perhaps through installing an operating system package called libfontconfig-dev), then devEMF can access font metric information for any installed font; if Fontconfig is not available, devEMF will attempt to use [zlib](https://www.zlib.net/) to access font metric information from the 14 core Adobe fonts included in devEMF under inst/.
 
 #### Bug reports
 Developers or users reporting bugs/feature requests shoulds create an issue on [github](https://github.com/plfjohnson/devEMF/issues).
