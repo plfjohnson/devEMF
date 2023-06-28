@@ -147,14 +147,15 @@ struct SSysFontInfo {
 
     struct SCharMetric {
         int code;
-        int w;
+        int wx;
         std::string name;
         int llx, lly, urx, ury; //bounding box extents
+        double advance;
         double width;
         double ascent;
         double descent;
         SCharMetric(void) {
-            width = ascent = descent = 0;
+            advance = width = ascent = descent = 0;
         }
     };
     typedef std::map<unsigned int,SCharMetric> TMetrics;
@@ -332,7 +333,7 @@ struct SSysFontInfo {
                 iss >> m_AFMFontBBox.llx >> m_AFMFontBBox.lly
                     >> m_AFMFontBBox.urx >> m_AFMFontBBox.ury;
                 m_AFMFontBBox.ascent = m_AFMFontBBox.ury * 0.001 * size;
-                m_AFMFontBBox.descent = m_AFMFontBBox.lly * 0.001 * size;
+                m_AFMFontBBox.descent = -m_AFMFontBBox.lly * 0.001 * size;
                 m_AFMFontBBox.width = (m_AFMFontBBox.urx-m_AFMFontBBox.llx)
                     * 0.001 * size;
             } else if (key == "C") {
@@ -340,15 +341,16 @@ struct SSysFontInfo {
                 iss >> std::hex >> cMetric.code >> std::dec >> key;
                 while (iss.good()) {
                     if (key == "WX") {
-                        iss >> cMetric.w;
-                        cMetric.width = cMetric.w * 0.001 * size;
+                        iss >> cMetric.wx;
+                        cMetric.advance = cMetric.wx * 0.001 * size;
                     } else if (key == "N") {
                         iss >> cMetric.name;
                     } else if (key == "B") {
                         iss >> cMetric.llx >> cMetric.lly
                             >> cMetric.urx >> cMetric.ury;
                         cMetric.ascent = cMetric.ury * 0.001 * size;
-                        cMetric.descent = cMetric.lly * 0.001 * size;
+                        cMetric.descent = -cMetric.lly * 0.001 * size;
+                        cMetric.width = (cMetric.urx-cMetric.llx) * 0.001 * size;
                     }
                     iss >> key;
                 }
@@ -451,9 +453,9 @@ struct SSysFontInfo {
         Rf_error("devEMF: Font to path conversion requires devEMF to be compiled with fontconfig (perhaps you need to first install a system level package called 'libfontconfig-dev' and then reinstall the devEMF package).");
     }
 
-    // actual advance (accounting for kerning!)
+    // actual advance (accounting for kerning and hinting)
     double GetAdvance(unsigned long prevC, unsigned long nextC) const {
-#ifdef HAVE_FREETYPE
+#ifdef HAVE_FONTCONFIG
         if (m_FontInfo) {
             //Rprintf("\nsize scaling:  %u, %i,%i, %f, %f\n", m_FontInfo->units_per_EM, m_FontInfo->size->metrics.x_ppem, m_FontInfo->size->metrics.y_ppem, m_FontInfo->size->metrics.x_scale/(double) 65536, m_FontInfo->size->metrics.y_scale / (double) 65536);
             unsigned int prevI = FT_Get_Char_Index(m_FontInfo, prevC);
@@ -461,21 +463,25 @@ struct SSysFontInfo {
             FT_Vector kerning;
             FT_Get_Kerning(m_FontInfo, prevI, nextI, FT_KERNING_DEFAULT, &kerning);
             FT_Load_Glyph(m_FontInfo, prevI, FT_LOAD_NO_BITMAP|FT_LOAD_TARGET_LIGHT);
-            //Rprintf("kkkerning %u %u %f %f %f\n", prevC, nextC, m_FontInfo->glyph->advance.x/(double)64, kerning.x/(double)64, m_FontInfo->glyph->linearHoriAdvance/(double)65536);
+            //Rprintf("kkkerning %u %u A:%f K:%f D:%f\n", prevC, nextC, m_FontInfo->glyph->advance.x/(double)64, kerning.x/(double)64, (m_FontInfo->glyph->lsb_delta - m_FontInfo->glyph->rsb_delta)/(double)64);
             return (m_FontInfo->glyph->advance.x + (m_FontInfo->glyph->lsb_delta - m_FontInfo->glyph->rsb_delta) + kerning.x)/(double)64;
         }
 #endif
-        double wid = 0;
 #ifdef HAVE_ZLIB
-        double asc, desc;
-        GetMetrics(prevC, asc, desc, wid);
+        double advance = 0;
+        TMetrics::const_iterator m = m_AFMCharMetrics.find(prevC);
+        if (m == m_AFMCharMetrics.end()) {
+            advance = 0;
+        } else {
+            advance = m->second.advance;
+        }
         TKerningTable::const_iterator kernI = m_AFMKerningTable.find(SCharPair(prevC, nextC));
         if (kernI != m_AFMKerningTable.end()) {
-             wid += kernI->second;
+             advance += kernI->second;
              //Rprintf("kkkerning %u %u %f\n", prevC, nextC, kernI->second);
         }
+        return advance;
 #endif
-        return wid;
     }
     
     void GetMetrics(unsigned int c, 
@@ -487,7 +493,9 @@ struct SSysFontInfo {
             }
             ascent = m_FontInfo->glyph->metrics.horiBearingY/(double)64;
             descent = (m_FontInfo->glyph->metrics.height - m_FontInfo->glyph->metrics.horiBearingY)/(double)64;
-            width = m_FontInfo->glyph->metrics.horiAdvance/(double)64;
+            //R asks for width, but wants the advance
+            //actual glyph width is m_FontInfo->glyph->metrics.width/(double)64;
+            width = m_FontInfo->glyph->advance.x/(double)64;
             return;
         }
 #endif
@@ -500,7 +508,8 @@ struct SSysFontInfo {
         } else {
             ascent = m->second.ascent;
             descent = m->second.descent;
-            width = m->second.width;
+            //actual glyph width is m->second.width
+            width = m->second.advance;
         }
 #endif
     }
@@ -508,9 +517,9 @@ struct SSysFontInfo {
         ascent = descent = width = 0;
 #ifdef HAVE_FONTCONFIG
         if (m_FontInfo) {
-            ascent = m_FontInfo->ascender;
-            descent = m_FontInfo->descender;
-            width = m_FontInfo->max_advance_width;
+            ascent = m_FontInfo->size->metrics.ascender/(double)64;
+            descent = m_FontInfo->size->metrics.descender/(double)64;
+            width = m_FontInfo->size->metrics.max_advance/(double)64;
             return;
         }
 #endif

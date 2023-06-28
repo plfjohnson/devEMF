@@ -1,3 +1,10 @@
+v4.4-1 -- 28 June 2023
+  -revert a change to the EMF+ page transform made in v4.4.
+   Previously used (fake) "pixel" units but changed to "inch".  Turns
+   out Word does not export to pdf properly when using an "inch" page
+   transform.  Reverting back to "pixel".
+  -fix sign bug in AFM descent calculation
+
 v4.4 -- 14 June 2023
   -avoid linux font metric dependency on Xft, which requires a
    connection to an X server, and instead directly use Fontconfig.

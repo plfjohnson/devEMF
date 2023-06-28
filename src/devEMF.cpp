@@ -470,9 +470,8 @@ bool CDevEMF::Open(const char* filename, int width, int height)
             emr.dpiY = Inches2Dev(1);
             emr.Write(m_File);
         }
-        { // page transform
-            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitInch,
-                                           1./Inches2Dev(1));
+        { // page transform (1 pixel == 1 device unit)
+            EMFPLUS::SSetPageTransform emr(EMFPLUS::eUnitPixel, 1);
             emr.Write(m_File);
         }
         {// use decent anti-aliasing (key for viewing in MS Office)
@@ -902,7 +901,7 @@ void CDevEMF::TextUTF8(double x, double y, const char *str, double rot,
             emr.emrtext.dx.push_back(info->GetAdvance(prevCh, nextCh));
         }
         //spec wants # advances = # characters, but maybe last is unused?
-        emr.emrtext.dx.push_back(info->GetAdvance(nextCh,nextCh));
+        emr.emrtext.dx.push_back(info->GetAdvance(nextCh, nextCh));
 
         emr.Write(m_File);
         /* Commented out for same reason as above
