@@ -268,92 +268,90 @@ private:
 };
 
 // R callbacks below (declare extern "C")
-namespace EMFcb {
-    extern "C" {
-        void Activate(pDevDesc) {}
-        void Deactivate(pDevDesc) {}
-        void Mode(int, pDevDesc) {}
-        Rboolean Locator(double*, double*, pDevDesc) {return FALSE;}
-        void Raster(unsigned int* r, int w, int h, double x, double y,
-                    double width, double height, double rot,
-                    Rboolean interpolate, const pGEcontext, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->
-                Raster(r,w,h,x,y,width,height,rot,interpolate);
-        }
-        SEXP Cap(pDevDesc) {
-            Rf_warning("Raster capture not available for EMF");
-            return R_NilValue;
-        }
-        void Path(double* x, double* y, int n, int* np, Rboolean wnd,
-                  const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Path(x,y, n,np, wnd, gc);
-        }
-        void Close(pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Close();
-            delete static_cast<CDevEMF*>(dd->deviceSpecific);
-        }
-        void NewPage(const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->NewPage(gc);
-        }
-        void MetricInfo(int c, const pGEcontext gc, double* ascent,
-                        double* descent, double* width, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->
-                MetricInfo(c, gc, ascent,descent, width);
-        }
-        double StrWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
-            return static_cast<CDevEMF*>(dd->deviceSpecific)->StrWidth(str, gc);
-        }
-        void Clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Clip(x0,x1,y0,y1);
-        }
-        void Circle(double x, double y, double r, const pGEcontext gc,
-                    pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Circle(x,y,r,gc);
-        }
-        void Line(double x1, double y1, double x2, double y2,
-                  const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Line(x1,y1,x2,y2,gc);
-        }
-        void EMFcb_Polyline(int n, double *x, double *y,
-                      const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Polyline(n,x,y, gc);
-        }
-        void TextUTF8(double x, double y, const char *str, double rot,
-                      double hadj, const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->
-                TextUTF8(x,y,str,rot,hadj,gc);
-        }
-        void Text(double, double, const char *, double,
-                  double, const pGEcontext, pDevDesc) {
-            Rf_warning("Non-UTF8 text currently unsupported in devEMF.");
-        }
-        void Rect(double x0, double y0, double x1, double y1,
-                  const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Rect(x0,y0,x1,y1,gc);
-        }
-        void EMFcb_Polygon(int n, double *x, double *y,
-                     const pGEcontext gc, pDevDesc dd) {
-            static_cast<CDevEMF*>(dd->deviceSpecific)->Polygon(n,x,y,gc);
-        }
-
-        void Size(double *left, double *right, double *bottom, double *top,
-                  pDevDesc dd) {
-            *left = dd->left; *right = dd->right;
-            *bottom = dd->bottom; *top = dd->top;
-        }
-        SEXP setPattern(SEXP pattern, pDevDesc) {
-            return pattern;
-        }
-        void releasePattern(SEXP, pDevDesc) {} 
-
-        //unimplemented stubs (these additions to the R graphics
-        //engine appear primarily targeted at Cairo graphics
-        SEXP setClipPath(SEXP, SEXP, pDevDesc) { return R_NilValue; }
-        void releaseClipPath(SEXP, pDevDesc) {}
-        SEXP setMask(SEXP, SEXP, pDevDesc) {return R_NilValue;}
-        void releaseMask(SEXP, pDevDesc) {}
+extern "C" {
+    void EMFcb_Activate(pDevDesc) {}
+    void EMFcb_Deactivate(pDevDesc) {}
+    void EMFcb_Mode(int, pDevDesc) {}
+    Rboolean EMFcb_Locator(double*, double*, pDevDesc) {return FALSE;}
+    void EMFcb_Raster(unsigned int* r, int w, int h, double x, double y,
+                      double width, double height, double rot,
+                      Rboolean interpolate, const pGEcontext, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->
+            Raster(r,w,h,x,y,width,height,rot,interpolate);
     }
-} //end of R callbacks / extern "C"
+    SEXP EMFcb_Cap(pDevDesc) {
+        Rf_warning("Raster capture not available for EMF");
+        return R_NilValue;
+    }
+    void EMFcb_Path(double* x, double* y, int n, int* np, Rboolean wnd,
+                    const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Path(x,y, n,np, wnd, gc);
+    }
+    void EMFcb_Close(pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Close();
+        delete static_cast<CDevEMF*>(dd->deviceSpecific);
+    }
+    void EMFcb_NewPage(const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->NewPage(gc);
+    }
+    void EMFcb_MetricInfo(int c, const pGEcontext gc, double* ascent,
+                          double* descent, double* width, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->
+            MetricInfo(c, gc, ascent,descent, width);
+    }
+    double EMFcb_StrWidth(const char *str, const pGEcontext gc, pDevDesc dd) {
+        return static_cast<CDevEMF*>(dd->deviceSpecific)->StrWidth(str, gc);
+    }
+    void EMFcb_Clip(double x0, double x1, double y0, double y1, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Clip(x0,x1,y0,y1);
+    }
+    void EMFcb_Circle(double x, double y, double r, const pGEcontext gc,
+                      pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Circle(x,y,r,gc);
+    }
+    void EMFcb_Line(double x1, double y1, double x2, double y2,
+                    const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Line(x1,y1,x2,y2,gc);
+    }
+    void EMFcb_Polyline(int n, double *x, double *y,
+                        const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Polyline(n,x,y, gc);
+    }
+    void EMFcb_TextUTF8(double x, double y, const char *str, double rot,
+                        double hadj, const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->
+            TextUTF8(x,y,str,rot,hadj,gc);
+    }
+    void EMFcb_Text(double, double, const char *, double,
+                    double, const pGEcontext, pDevDesc) {
+        Rf_warning("Non-UTF8 text currently unsupported in devEMF.");
+    }
+    void EMFcb_Rect(double x0, double y0, double x1, double y1,
+                    const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Rect(x0,y0,x1,y1,gc);
+    }
+    void EMFcb_Polygon(int n, double *x, double *y,
+                       const pGEcontext gc, pDevDesc dd) {
+        static_cast<CDevEMF*>(dd->deviceSpecific)->Polygon(n,x,y,gc);
+    }
+
+    void EMFcb_Size(double *left, double *right, double *bottom, double *top,
+                    pDevDesc dd) {
+        *left = dd->left; *right = dd->right;
+        *bottom = dd->bottom; *top = dd->top;
+    }
+    SEXP EMFcb_setPattern(SEXP pattern, pDevDesc) {
+        return pattern;
+    }
+    void EMFcb_releasePattern(SEXP, pDevDesc) {} 
+
+    //unimplemented stubs (these additions to the R graphics
+    //engine appear primarily targeted at Cairo graphics
+    SEXP EMFcb_setClipPath(SEXP, SEXP, pDevDesc) { return R_NilValue; }
+    void EMFcb_releaseClipPath(SEXP, pDevDesc) {}
+    SEXP EMFcb_setMask(SEXP, SEXP, pDevDesc) {return R_NilValue;}
+    void EMFcb_releaseMask(SEXP, pDevDesc) {}
+}//end of R callbacks / extern "C"
 
 
 void CDevEMF::MetricInfo(int c, const pGEcontext gc, double* ascent,
@@ -939,32 +937,32 @@ Rboolean EMFDeviceDriver(pDevDesc dd, const char *filename,
     dd->startgamma = 1;
 
     /* Device callbacks */
-    dd->activate = EMFcb::Activate;
-    dd->deactivate = EMFcb::Deactivate;
-    dd->close = EMFcb::Close;
-    dd->clip = EMFcb::Clip;
-    dd->size = EMFcb::Size;
-    dd->newPage = EMFcb::NewPage;
-    dd->line = EMFcb::Line;
-    dd->text = EMFcb::Text;
-    dd->strWidth = EMFcb::StrWidth;
-    dd->rect = EMFcb::Rect;
-    dd->circle = EMFcb::Circle;
+    dd->activate = EMFcb_Activate;
+    dd->deactivate = EMFcb_Deactivate;
+    dd->close = EMFcb_Close;
+    dd->clip = EMFcb_Clip;
+    dd->size = EMFcb_Size;
+    dd->newPage = EMFcb_NewPage;
+    dd->line = EMFcb_Line;
+    dd->text = EMFcb_Text;
+    dd->strWidth = EMFcb_StrWidth;
+    dd->rect = EMFcb_Rect;
+    dd->circle = EMFcb_Circle;
 #if R_GE_version >= 6
-    dd->raster = EMFcb::Raster;
-    dd->cap = EMFcb::Cap;
+    dd->raster = EMFcb_Raster;
+    dd->cap = EMFcb_Cap;
 #endif
 #if R_GE_version >= 8
-    dd->path = EMFcb::Path;
+    dd->path = EMFcb_Path;
 #endif
-    dd->polygon = EMFcb::EMFcb_Polygon;
-    dd->polyline = EMFcb::EMFcb_Polyline;
-    dd->locator = EMFcb::Locator;
-    dd->mode = EMFcb::Mode;
-    dd->metricInfo = EMFcb::MetricInfo;
+    dd->polygon = EMFcb_Polygon;
+    dd->polyline = EMFcb_Polyline;
+    dd->locator = EMFcb_Locator;
+    dd->mode = EMFcb_Mode;
+    dd->metricInfo = EMFcb_MetricInfo;
     dd->hasTextUTF8 = TRUE;
-    dd->textUTF8       = EMFcb::TextUTF8;
-    dd->strWidthUTF8   = EMFcb::StrWidth;
+    dd->textUTF8       = EMFcb_TextUTF8;
+    dd->strWidthUTF8   = EMFcb_StrWidth;
     dd->wantSymbolUTF8 = TRUE;
     dd->useRotatedTextInContour = TRUE;
     dd->canClip = TRUE;
@@ -972,12 +970,12 @@ Rboolean EMFDeviceDriver(pDevDesc dd, const char *filename,
     dd->canChangeGamma = FALSE;
     dd->displayListOn = FALSE;
 #if R_GE_version >= 13
-    dd->setPattern      = EMFcb::setPattern;
-    dd->releasePattern  = EMFcb::releasePattern;
-    dd->setClipPath     = EMFcb::setClipPath;
-    dd->releaseClipPath = EMFcb::releaseClipPath;
-    dd->setMask         = EMFcb::setMask;
-    dd->releaseMask     = EMFcb::releaseMask;
+    dd->setPattern      = EMFcb_setPattern;
+    dd->releasePattern  = EMFcb_releasePattern;
+    dd->setClipPath     = EMFcb_setClipPath;
+    dd->releaseClipPath = EMFcb_releaseClipPath;
+    dd->setMask         = EMFcb_setMask;
+    dd->releaseMask     = EMFcb_releaseMask;
 #endif
 
     /* Screen Dimensions in device coordinates */

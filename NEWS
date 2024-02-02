@@ -1,3 +1,11 @@
+v4.4-2 -- 2 Feb 2024
+  -change naming of callback functions (which must be declared extern
+   "C") to start with "EMFcb_".  Previously, these functions were
+   defined inside a C++ namespace called EMFcb; however, the namespace
+   isn't included in the exported names, so this strategy was useless
+   at preventing global naming conflicts.  Thanks to Tomas Kaliberña
+   for identifying a windows header conflict and this easy solution.
+
 v4.4-1 -- 28 June 2023
   -revert a change to the EMF+ page transform made in v4.4.
    Previously used (fake) "pixel" units but changed to "inch".  Turns
