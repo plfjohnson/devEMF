@@ -314,7 +314,7 @@ namespace EMFcb {
                   const pGEcontext gc, pDevDesc dd) {
             static_cast<CDevEMF*>(dd->deviceSpecific)->Line(x1,y1,x2,y2,gc);
         }
-        void Polyline(int n, double *x, double *y, 
+        void EMFcb_Polyline(int n, double *x, double *y,
                       const pGEcontext gc, pDevDesc dd) {
             static_cast<CDevEMF*>(dd->deviceSpecific)->Polyline(n,x,y, gc);
         }
@@ -331,7 +331,7 @@ namespace EMFcb {
                   const pGEcontext gc, pDevDesc dd) {
             static_cast<CDevEMF*>(dd->deviceSpecific)->Rect(x0,y0,x1,y1,gc);
         }
-        void Polygon(int n, double *x, double *y, 
+        void EMFcb_Polygon(int n, double *x, double *y,
                      const pGEcontext gc, pDevDesc dd) {
             static_cast<CDevEMF*>(dd->deviceSpecific)->Polygon(n,x,y,gc);
         }
@@ -957,8 +957,8 @@ Rboolean EMFDeviceDriver(pDevDesc dd, const char *filename,
 #if R_GE_version >= 8
     dd->path = EMFcb::Path;
 #endif
-    dd->polygon = EMFcb::Polygon;
-    dd->polyline = EMFcb::Polyline;
+    dd->polygon = EMFcb::EMFcb_Polygon;
+    dd->polyline = EMFcb::EMFcb_Polyline;
     dd->locator = EMFcb::Locator;
     dd->mode = EMFcb::Mode;
     dd->metricInfo = EMFcb::MetricInfo;
