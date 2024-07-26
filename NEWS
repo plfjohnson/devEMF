@@ -1,3 +1,10 @@
+v4.5 -- 26 July 2024
+  -fix bug in recyling of slots in EMF+ object table (github issue
+   #8).  Previously, recycled object created the longest time ago.
+   Now, recycle object used the longest time ago.  The earlier
+   algorithm led to, in certain cirumstances, a object being replaced
+   in the middle of a drawing operation.
+
 v4.4-2 -- 2 Feb 2024
   -change naming of callback functions (which must be declared extern
    "C") to start with "EMFcb_".  Previously, these functions were

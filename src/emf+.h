@@ -28,6 +28,7 @@
 #include <stdexcept>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "emf.h"
 
@@ -1000,8 +1001,10 @@ namespace EMFPLUS {
     class CObjectTable {
     public:
         CObjectTable(void) {
-            m_LastInserted = kMaxObjTableSize-1;
             memset(m_Table, 0, sizeof(m_Table));
+            for (unsigned int i = 0; i < kMaxObjTableSize; ++i) {
+                m_LastUsed.push_front(i);
+            }
         }
         ~CObjectTable(void) {
             for (unsigned int i = 0;  i < kMaxObjTableSize;  ++i) {
@@ -1046,26 +1049,40 @@ namespace EMFPLUS {
     private:
         //note: takes ownership over pointer!
         unsigned char x_InsertObject(SObject *obj, EMF::ofstream &out) {
+            unsigned int slot;
             TIndex::iterator i = m_Index.find(obj);
             if (i == m_Index.end()) {
-                m_LastInserted = (m_LastInserted+1) % kMaxObjTableSize;
-                SObject *old = m_Table[m_LastInserted];
+                //use slot last used longest ago
+                slot = m_LastUsed.back();
+                m_LastUsed.pop_back();
+                SObject *old = m_Table[slot];
                 if (old) {
                     m_Index.erase(old);
                     delete old;
                 }
-                m_Table[m_LastInserted] = obj;
-                obj->SetObjId(m_LastInserted);
-                i = m_Index.insert(obj).first;
+                obj->SetObjId(slot);
                 obj->Write(out);
+                m_Table[slot] = obj;
+                i = m_Index.insert(obj).first;
+                m_LastUsed.push_front(slot);
+                m_LastUsedIter[slot] = m_LastUsed.begin();
             } else {
                 delete obj;
+                slot = (*i)->GetObjId();
+                //update slot last used if necesary
+                if (m_LastUsedIter[slot] != m_LastUsed.begin()) {
+                    m_LastUsed.erase(m_LastUsedIter[slot]);
+                    m_LastUsed.push_front(slot);
+                    m_LastUsedIter[slot] = m_LastUsed.begin();
+                }
             }
-            return (*i)->GetObjId();
+            return slot;
         }
     private:
         SObject* m_Table[kMaxObjTableSize];
-        unsigned int m_LastInserted;
+        typedef std::list<unsigned int> TLastUsedQueue;
+        TLastUsedQueue m_LastUsed;
+        TLastUsedQueue::iterator m_LastUsedIter[kMaxObjTableSize];
         typedef std::set<SObject*, ObjectPtrCmp> TIndex;
         TIndex m_Index;
     };
