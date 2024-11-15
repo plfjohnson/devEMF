@@ -3,8 +3,11 @@ Type: Package
 Title: EMF Graphics Output Device
 Version: 4.5
 Date: 2024-07-26
-Author: Philip Johnson
-Maintainer: Philip Johnson <plfj@umd.edu> 
+Authors@R: person(given = "Philip",
+                  family = "Johnson",
+                  role = c("aut", "cre"),
+                  email = "plfj@umd.edu",
+                  comment = c(ORCID = "0000-0001-6087-7064"))
 Depends: R (>= 2.10.1)
 SystemRequirements: fontconfig or zlib (only needed for platforms other than modern OSX and Windows)
 Description: Output graphics to EMF+/EMF.
