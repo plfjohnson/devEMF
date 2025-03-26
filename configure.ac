@@ -17,7 +17,7 @@ AC_LANG(C++)
 #-----------------------------------------------------------------------
 AC_PATH_PROG([PKGCONF],[pkg-config],[],[$PATH:/usr/local/bin:ext/bin:ext:/sw/bin:/opt/bin])
 
-if test "xx$FONTCONFIG_LIBS" == "xx"; then
+if test "xx$FONTCONFIG_LIBS" = "xx"; then
    if test "xx$PKGCONF" != "xx"; then
       AC_MSG_CHECKING([whether pkg-config knows about Fontconfig])
       if "${PKGCONF}" --exists fontconfig; then
@@ -33,7 +33,7 @@ if test "xx$FONTCONFIG_LIBS" == "xx"; then
 fi
 
 
-if test "xx$ZLIB_LIBS" == "xx"; then
+if test "xx$ZLIB_LIBS" = "xx"; then
    if test "xx$PKGCONF" != "xx"; then
       AC_MSG_CHECKING([whether pkg-config knows about zlib])
       if "${PKGCONF}" --exists zlib; then
@@ -49,7 +49,7 @@ if test "xx$ZLIB_LIBS" == "xx"; then
 fi
 
 # below only applies to Mac/OSX
-if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
+if test "xx$OSX_LIBS" = "xx"  &&  test `uname -s` = "Darwin"; then
    OSX_LIBS="-framework CoreText"
 fi
 
@@ -62,7 +62,7 @@ AC_CHECK_HEADERS_ONCE(CoreText/CTFont.h)
 GOTZ=0
 GOTFC=0
 GOTCT=0
-if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
+if (test "x$ac_cv_header_CoreText_CTFont_h" = xyes); then
    GOODLIBS="${LIBS}"
    LIBS="${GOODLIBS} ${OSX_LIBS}"
    AC_SEARCH_LIBS(CTFontGetGlyphsForCharacters, ,
@@ -74,14 +74,14 @@ fi
 # extra libraries installed that are not present (non-default) on
 # installation computer
 if test ${GOTCT} = 0; then
-   if (test "x$ac_cv_header_zlib_h" == xyes); then
+   if (test "x$ac_cv_header_zlib_h" = xyes); then
       GOODLIBS="${LIBS}"
       LIBS="${GOODLIBS} ${ZLIB_LIBS}"
       AC_SEARCH_LIBS(gzopen, z,
                      [CPPFLAGS="${CPPFLAGS} -DHAVE_ZLIB"; GOTZ=1],
                      [LIBS="${GOODLIBS}"])
    fi
-   if (test "x$ac_cv_header_fontconfig_fontconfig_h" == xyes); then
+   if (test "x$ac_cv_header_fontconfig_fontconfig_h" = xyes); then
       GOODLIBS="${LIBS}"
       LIBS="${GOODLIBS} ${FONTCONFIG_LIBS}"
       AC_SEARCH_LIBS(FcFontMatch, ,

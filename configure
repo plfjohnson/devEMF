@@ -2188,7 +2188,7 @@ fi
 
 
 
-if test "xx$FONTCONFIG_LIBS" == "xx"; then
+if test "xx$FONTCONFIG_LIBS" = "xx"; then
    if test "xx$PKGCONF" != "xx"; then
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about Fontconfig" >&5
 printf %s "checking whether pkg-config knows about Fontconfig... " >&6; }
@@ -2209,7 +2209,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 
-if test "xx$ZLIB_LIBS" == "xx"; then
+if test "xx$ZLIB_LIBS" = "xx"; then
    if test "xx$PKGCONF" != "xx"; then
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether pkg-config knows about zlib" >&5
 printf %s "checking whether pkg-config knows about zlib... " >&6; }
@@ -2230,7 +2230,7 @@ printf "%s\n" "no" >&6; }
 fi
 
 # below only applies to Mac/OSX
-if test "xx$OSX_LIBS" == "xx"  &&  test `uname -s` == "Darwin"; then
+if test "xx$OSX_LIBS" = "xx"  &&  test `uname -s` = "Darwin"; then
    OSX_LIBS="-framework CoreText"
 fi
 
@@ -2770,11 +2770,11 @@ if test x$ac_prog_cxx_stdcxx = xno
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CXX option to enable C++11 features" >&5
 printf %s "checking for $CXX option to enable C++11 features... " >&6; }
-if test ${ac_cv_prog_cxx_11+y}
+if test ${ac_cv_prog_cxx_cxx11+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
-  ac_cv_prog_cxx_11=no
+  ac_cv_prog_cxx_cxx11=no
 ac_save_CXX=$CXX
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -2816,11 +2816,11 @@ if test x$ac_prog_cxx_stdcxx = xno
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for $CXX option to enable C++98 features" >&5
 printf %s "checking for $CXX option to enable C++98 features... " >&6; }
-if test ${ac_cv_prog_cxx_98+y}
+if test ${ac_cv_prog_cxx_cxx98+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
-  ac_cv_prog_cxx_98=no
+  ac_cv_prog_cxx_cxx98=no
 ac_save_CXX=$CXX
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -2906,7 +2906,7 @@ fi
 GOTZ=0
 GOTFC=0
 GOTCT=0
-if (test "x$ac_cv_header_CoreText_CTFont_h" == xyes); then
+if (test "x$ac_cv_header_CoreText_CTFont_h" = xyes); then
    GOODLIBS="${LIBS}"
    LIBS="${GOODLIBS} ${OSX_LIBS}"
    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing CTFontGetGlyphsForCharacters" >&5
@@ -2975,7 +2975,7 @@ fi
 # extra libraries installed that are not present (non-default) on
 # installation computer
 if test ${GOTCT} = 0; then
-   if (test "x$ac_cv_header_zlib_h" == xyes); then
+   if (test "x$ac_cv_header_zlib_h" = xyes); then
       GOODLIBS="${LIBS}"
       LIBS="${GOODLIBS} ${ZLIB_LIBS}"
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing gzopen" >&5
@@ -3039,7 +3039,7 @@ else $as_nop
 fi
 
    fi
-   if (test "x$ac_cv_header_fontconfig_fontconfig_h" == xyes); then
+   if (test "x$ac_cv_header_fontconfig_fontconfig_h" = xyes); then
       GOODLIBS="${LIBS}"
       LIBS="${GOODLIBS} ${FONTCONFIG_LIBS}"
       { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for library containing FcFontMatch" >&5

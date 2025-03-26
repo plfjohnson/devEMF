@@ -1,8 +1,8 @@
 Package: devEMF
 Type: Package
 Title: EMF Graphics Output Device
-Version: 4.5
-Date: 2024-07-26
+Version: 4.5-1
+Date: 2025-03-24
 Authors@R: person(given = "Philip",
                   family = "Johnson",
                   role = c("aut", "cre"),
