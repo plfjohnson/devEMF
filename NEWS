@@ -1,5 +1,18 @@
-v4.5-2 -- 25 May 2026
+v4.6 -- 28 May 2026
   -update DESCRIPTION to mention "macOS" instead of "OSX"
+  -minor refactoring of font metric code involving Adobe font metric
+   (afm) files.  AFM files included under inst/afm previously, in
+   violation of AFM spec, used hexadecimal code points in a place that
+   should have been decimal; these files have been updated to use
+   decimal and the loading code changed correspondingly.  Further, the
+   AFM loading code has been made flexible to allow loading any afm
+   files found in that directory rather than a hard-coded list (file
+   names for any additional files need formatted analogously to the
+   existing inst/afm files).  When both fontconfig and zlib are
+   installed, if fontconfig offers a substitution instead of the
+   requested font family, then the AFM files will be checked for an
+   exact match.  If an exact AFM is available, then it will be used
+   instead of the fontconfig substitution.
 
 v4.5-1 -- 24 Mar 2025
   -swap use of "==" for "=" in configure.ac (and configure)

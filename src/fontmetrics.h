@@ -36,6 +36,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <filesystem>
 #endif
 #ifdef HAVE_FONTCONFIG
 #include <fontconfig/fontconfig.h>
@@ -142,8 +143,7 @@ struct SSysFontInfo {
 #ifndef WIN32
     
 #ifdef HAVE_ZLIB
-    static std::map<std::string, std::vector<std::string> > afmPathDB;
-    static std::string packagePath;
+    static std::map<std::string, std::string[4]> afmPathDB;
 
     struct SCharMetric {
         int code;
@@ -192,29 +192,6 @@ struct SSysFontInfo {
     SSysFontInfo(const SFontSpec& spec) : m_Spec(spec) {
 #ifdef HAVE_ZLIB
         if (afmPathDB.size() == 0) {
-            afmPathDB["Courier"].push_back("Courier-ucs.afm");
-            afmPathDB["Courier"].push_back("Courier-Bold-ucs.afm");
-            afmPathDB["Courier"].push_back("Courier-Oblique-ucs.afm");
-            afmPathDB["Courier"].push_back("Courier-BoldOblique-ucs.afm");
-            afmPathDB["Helvetica"].push_back("Helvetica-ucs.afm");
-            afmPathDB["Helvetica"].push_back("Helvetica-Bold-ucs.afm");
-            afmPathDB["Helvetica"].push_back("Helvetica-Oblique-ucs.afm");
-            afmPathDB["Helvetica"].push_back("Helvetica-BoldOblique-ucs.afm");
-            afmPathDB["sans"] = afmPathDB["Helvetica"];
-            afmPathDB["Times"].push_back("Times-Roman-ucs.afm");
-            afmPathDB["Times"].push_back("Times-Bold-ucs.afm");
-            afmPathDB["Times"].push_back("Times-Italic-ucs.afm");
-            afmPathDB["Times"].push_back("Times-BoldItalic-ucs.afm");
-            afmPathDB["serif"] = afmPathDB["times"];
-            afmPathDB["ZapfDingbats"].push_back("ZapfDingbats-ucs.afm");
-            afmPathDB["ZapfDingbats"].push_back("ZapfDingbats-ucs.afm");
-            afmPathDB["ZapfDingbats"].push_back("ZapfDingbats-ucs.afm");
-            afmPathDB["ZapfDingbats"].push_back("ZapfDingbats-ucs.afm");
-            afmPathDB["Symbol"].push_back("Symbol-ucs.afm");
-            afmPathDB["Symbol"].push_back("Symbol-ucs.afm");
-            afmPathDB["Symbol"].push_back("Symbol-ucs.afm");
-            afmPathDB["Symbol"].push_back("Symbol-ucs.afm");
-
             //find full path to package using R "findPackage" function
             SEXP findPackage, call;
             PROTECT(findPackage = Rf_findFun(Rf_install("find.package"),
@@ -228,7 +205,39 @@ struct SSysFontInfo {
                 Rf_error("find.package failed to find devEMF install location"
                          " (or uniquely identify location)");
             }
-            packagePath = CHAR(STRING_ELT(res, 0));
+            std::string packagePath = CHAR(STRING_ELT(res, 0));
+
+            for (auto const& fullFN : std::filesystem::directory_iterator
+                     (std::filesystem::path(packagePath+"/afm"))) {
+                const std::string& fn = fullFN.path().filename().string();
+                //filename needs to have pattern (.+?)-(.+?-).*.afm.gz where the first field is the font family and the second is the face one of (Bold, Oblique, Italic, BoldOblique, BoldItalic)
+                std::string::size_type split1 = fn.find('-');
+                if (fn.length() > 6  &&
+                    fn.substr(fn.length()-6,6) == "afm.gz"  &&
+                    split1 != std::string::npos) {
+                    std::string fam = fn.substr(0, split1);
+                    unsigned int face = 0;
+                    std::string::size_type split2 = fn.find('-', split1+1);
+                    if (split2 != std::string::npos) {
+                        std::string sFace = fn.substr(split1+1,split2-split1-1);
+                        if (sFace == "Bold") {
+                            face = 1;
+                        } else if (sFace == "Oblique"  ||
+                                   sFace == "Italic") {
+                            face = 2;
+                        } else if (sFace == "BoldOblique"  ||
+                                   sFace == "BoldItalic") {
+                            face = 3;
+                        }
+                    }
+                    //extract font name from filename (before hyphen)
+                    afmPathDB[fam][face] = fullFN.path().string();
+                }
+            }
+            for (unsigned int i = 0;  i < 4;  ++i) {
+                afmPathDB["sans"][i] = afmPathDB["Helvetica"][i];
+                afmPathDB["serif"][i] = afmPathDB["Times"][i];
+            }
         }
 #endif
 #ifdef HAVE_FONTCONFIG
@@ -252,34 +261,48 @@ struct SSysFontInfo {
         FcResult res;
         FcPattern *font = FcFontMatch(m_Fontconfig.m_FCconfig, pattern, &res);
         if (res == FcResultMatch) {
+            bool useFontConfig = true;
             char *family;
             FcPatternGetString(font, FC_FAMILY, 0, (FcChar8**)&family);
             if (m_Spec.m_Family != family) {
-                Rf_warning("devEMF: your system substituted font family '%s' when you requested '%s'",
-                           family, m_Spec.m_Family.c_str());
+                // fontconfig performed a substitution
+#ifdef HAVE_ZLIB
+                // do we have an exact match with AFM?
+                if (m_Spec.m_Face >= 1  &&  m_Spec.m_Face <= 4  &&
+                    afmPathDB.find(m_Spec.m_Family) != afmPathDB.end()  &&
+                    afmPathDB[m_Spec.m_Family][m_Spec.m_Face-1] != "") {
+                    useFontConfig = false;
+                    FcPatternDestroy(pattern);
+                    FcPatternDestroy(font);
+                }
+#endif
+                if (useFontConfig) {
+                    Rf_warning("devEMF: your system substituted font family '%s' when you requested '%s'",
+                               family, m_Spec.m_Family.c_str());
+                }
             }
-
-            //load actual font face
-            char* filename;
-            int index;
-            bool fontLoaded = (FcPatternGetString(font, FC_FILE, 0, (FcChar8**)&filename) == FcResultMatch  &&
-                               FcPatternGetInteger(font, FC_INDEX, 0, &index) == FcResultMatch &&
-                               FT_New_Face(m_Fontconfig.m_FTlibrary, filename, index, &m_FontInfo) == 0);
-            FcPatternDestroy(pattern);
-            FcPatternDestroy(font);
-            if (fontLoaded) {
-                FT_Matrix transform; //flip glyph y axis to match emf's coord system
-                transform.xx = 65536; transform.xy = 0;
-                transform.yx = 0; transform.yy = -65536;
-                FT_Set_Transform(m_FontInfo, &transform, NULL);
-                FT_Set_Pixel_Sizes(m_FontInfo, m_Spec.m_Size, 0);
-                return;
+            if (useFontConfig) {
+                //load actual font face
+                char* filename;
+                int index;
+                bool fontLoaded = (FcPatternGetString(font, FC_FILE, 0, (FcChar8**)&filename) == FcResultMatch  &&
+                                   FcPatternGetInteger(font, FC_INDEX, 0, &index) == FcResultMatch &&
+                                   FT_New_Face(m_Fontconfig.m_FTlibrary, filename, index, &m_FontInfo) == 0);
+                FcPatternDestroy(pattern);
+                FcPatternDestroy(font);
+                if (fontLoaded) {
+                    FT_Matrix transform; //flip glyph y axis to match emf's coord system
+                    transform.xx = 65536; transform.xy = 0;
+                    transform.yx = 0; transform.yy = -65536;
+                    FT_Set_Transform(m_FontInfo, &transform, NULL);
+                    FT_Set_Pixel_Sizes(m_FontInfo, m_Spec.m_Size, 0);
+                    return;
+                }
             }
         }
 #endif
 #ifdef HAVE_ZLIB
-        if (afmPathDB.find(m_Spec.m_Family) == afmPathDB.end()  ||
-            afmPathDB[m_Spec.m_Family].size() < m_Spec.m_Face) {
+        if (!LoadAFM(m_Spec.m_Family, m_Spec.m_Face, m_Spec.m_Size, true)) {
 #ifdef HAVE_FONTCONFIG
             Rf_warning("devEMF: font metric information not found for family '%s'; "
                        "using 'Helvetica' instead", m_Spec.m_Family.c_str());
@@ -289,24 +312,14 @@ struct SSysFontInfo {
 #endif
 
             //last-ditch substitute with "Helvetica"
-            LoadAFM((packagePath+"/afm/" +
-                     afmPathDB["Helvetica"][m_Spec.m_Face-1] + ".gz").
-                    c_str(), m_Spec.m_Size, true);
-        } else {
-            LoadAFM((packagePath+"/afm/" +
-                     afmPathDB[m_Spec.m_Family][m_Spec.m_Face-1] + ".gz").
-                    c_str(), m_Spec.m_Size, true);
+            LoadAFM("Helvetica", m_Spec.m_Face, m_Spec.m_Size, true);
         }
         //populate extra characters
         if (m_Spec.m_Family != "Symbol") {
-            LoadAFM((packagePath+"/afm/" +
-                     afmPathDB["Symbol"][m_Spec.m_Face-1] + ".gz").
-                    c_str(), m_Spec.m_Size, false);
+            LoadAFM("Symbol", m_Spec.m_Face, m_Spec.m_Size, false);
         }
         if (m_Spec.m_Family != "ZapfDingbats") {
-            LoadAFM((packagePath+"/afm/" +
-                     afmPathDB["ZapfDingbats"][m_Spec.m_Face-1] + ".gz").
-                    c_str(), m_Spec.m_Size, false);
+            LoadAFM("ZapfDingbats", m_Spec.m_Face, m_Spec.m_Size, false);
         }
 #endif
     }
@@ -319,7 +332,14 @@ struct SSysFontInfo {
 #endif
 
 #ifdef HAVE_ZLIB
-    void LoadAFM(const std::string &filename, int size, bool loadFontBBox) {
+    bool LoadAFM(const std::string &family, int face, int size, bool loadFontBBox) {
+        if (face < 1  || face > 4  ||
+            afmPathDB.find(family) == afmPathDB.end()  ||
+            afmPathDB[family][face-1] == "") {
+            return false;
+        }
+        const std::string &filename = afmPathDB[family][face-1];
+        
         typedef std::map<std::string, unsigned int> TName2Code;
         TName2Code name2code;
         const unsigned int buffsize = 512;
@@ -338,7 +358,7 @@ struct SSysFontInfo {
                     * 0.001 * size;
             } else if (key == "C") {
                 SCharMetric cMetric;
-                iss >> std::hex >> cMetric.code >> std::dec >> key;
+                iss >> cMetric.code >> key;
                 while (iss.good()) {
                     if (key == "WX") {
                         iss >> cMetric.wx;
@@ -373,6 +393,7 @@ struct SSysFontInfo {
             }
         }
         gzclose(afm);
+        return true;
     }
 #endif
 
@@ -534,8 +555,7 @@ struct SSysFontInfo {
 SSysFontInfo::SFontconfig SSysFontInfo::m_Fontconfig;// initialize & close at program start/end
 #endif
 #ifdef HAVE_ZLIB
-std::map<std::string, std::vector<std::string> > SSysFontInfo::afmPathDB;
-std::string SSysFontInfo::packagePath;
+std::map<std::string, std::string[4]> SSysFontInfo::afmPathDB;
 #endif
 
 #endif /* end not windows */
