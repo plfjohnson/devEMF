@@ -12,7 +12,9 @@ v4.6 -- 28 May 2026
    installed, if fontconfig offers a substitution instead of the
    requested font family, then the AFM files will be checked for an
    exact match.  If an exact AFM is available, then it will be used
-   instead of the fontconfig substitution.
+   instead of the fontconfig substitution.  Thanks to Bill Huang for
+   identifying the hex/dec issue and suggesting that afm should be
+   attempted before font substitution.
 
 v4.5-1 -- 24 Mar 2025
   -swap use of "==" for "=" in configure.ac (and configure)
