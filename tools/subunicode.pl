@@ -18,7 +18,9 @@ foreach my $fn (@lookupTables) {
         next if /^#/;
         chomp;
         my ($name, $unicode) = split /;/;
-        $name2unicode{$name} = $unicode;
+        if ($unicode !~ / /) { #if contains space, then this is a combined character -- not handled!
+            $name2unicode{$name} = hex($unicode);
+        }
     }
     close INFILE;
 }
